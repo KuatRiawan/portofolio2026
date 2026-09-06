@@ -21,7 +21,6 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
 
   // Emotional Mood Engine (happy, angry, dizzy, sad, surprised, love, sleepy)
   const [mood, setMood] = useState<MascotMood>('happy');
-  const [clickCount, setClickCount] = useState<number>(0);
   
   const [speechBubble, setSpeechBubble] = useState<string>('Halo! Aku Awans, tarik atau geser aku atau klik aku!');
   const [showSpeech, setShowSpeech] = useState<boolean>(true);
@@ -36,7 +35,6 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
   const isPointerDownRef = useRef<boolean>(false);
   const hasMovedRef = useRef<boolean>(false);
 
-  const clickResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const moodResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const moodList: MascotMood[] = ['happy', 'dizzy', 'sad', 'angry', 'surprised', 'love', 'sleepy'];
