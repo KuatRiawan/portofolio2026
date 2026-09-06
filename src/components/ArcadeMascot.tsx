@@ -35,15 +35,21 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
   const isPointerDownRef = useRef<boolean>(false);
   const hasMovedRef = useRef<boolean>(false);
 
+  // Physics Velocity & Shake Tracker Refs
+  const lastPointerRef = useRef<{ x: number; y: number; time: number }>({ x: 0, y: 0, time: 0 });
+  const velocityRef = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
+  const shakeCountRef = useRef<number>(0);
+  const lastDirectionRef = useRef<'left' | 'right' | null>(null);
+
   const moodResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const moodList: MascotMood[] = ['happy', 'dizzy', 'sad', 'angry', 'surprised', 'love', 'sleepy'];
   
   const moodQuotes: Record<MascotMood, string> = {
     happy: 'Halo! Awans lagi senang hari ini!',
-    dizzy: 'Waduh! Awans pusing banget tujuh keliling diklik terus-terusan!',
+    dizzy: 'Waduh! Awans pusing banget tujuh keliling dikocok-kocok!',
     sad: 'Huuu... Awans sedih banget, jangan dijailin terus dong...',
-    angry: 'Aduh! Awans MARAH NIH! Jangan diganggu terus!',
+    angry: 'Aduh! Awans MARAH NIH karena dilempar-lempar!',
     surprised: 'WAAA! Awans kaget banget!',
     love: 'Hehe, Awans sayang banget sama kamu!',
     sleepy: 'Zzz... Awans lagi ngantuk mau tidur...',
@@ -72,8 +78,8 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
   useEffect(() => {
     if (isDragging || isPaused || mood === 'sleepy') return;
 
-    const walkSpeed = mood === 'angry' ? 1.3 : mood === 'dizzy' ? 0.3 : 0.45;
-    const intervalTime = mood === 'angry' ? 45 : mood === 'dizzy' ? 120 : 90;
+    const walkSpeed = mood === 'angry' ? 1.4 : mood === 'dizzy' ? 0.3 : 0.45;
+    const intervalTime = mood === 'angry' ? 40 : mood === 'dizzy' ? 120 : 90;
 
     const interval = setInterval(() => {
       setPos((prevPos) => {
@@ -119,7 +125,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
     return () => clearInterval(speechTimer);
   }, [isDragging, isPaused, mood]);
 
-  // Idle Timer -> Sleepy after 18 seconds of no interaction
+  // Idle Timer -> Sleepy after 20 seconds of no interaction
   useEffect(() => {
     const idleTimer = setTimeout(() => {
       if (!isDragging && !isPaused && mood === 'happy') {
@@ -127,7 +133,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
         setSpeechBubble('Zzz... Awans lagi istirahat sejenak...');
         setShowSpeech(true);
       }
-    }, 18000);
+    }, 20000);
 
     return () => clearTimeout(idleTimer);
   }, [mood, isDragging, isPaused]);
@@ -148,6 +154,11 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
   const startPointer = (clientX: number, clientY: number) => {
     isPointerDownRef.current = true;
     hasMovedRef.current = false;
+    shakeCountRef.current = 0;
+    lastDirectionRef.current = null;
+    velocityRef.current = { vx: 0, vy: 0 };
+    lastPointerRef.current = { x: clientX, y: clientY, time: Date.now() };
+
     dragRef.current = {
       startX: clientX,
       startY: clientY,
@@ -159,6 +170,9 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
   useEffect(() => {
     const handlePointerMove = (clientX: number, clientY: number) => {
       if (!isPointerDownRef.current) return;
+      const now = Date.now();
+      const dt = Math.max(now - lastPointerRef.current.time, 10);
+
       const dx = clientX - dragRef.current.startX;
       const dy = clientY - dragRef.current.startY;
       const dist = Math.hypot(dx, dy);
@@ -168,16 +182,42 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
         hasMovedRef.current = true;
         soundFx.playGrabPulse();
         setMood('surprised'); // Kaget saat diangkat!
-        setSpeechBubble('Waaaa! Aku terbang diangkat!');
+        setSpeechBubble('Waaaa! Awans terbang diangkat!');
         setShowSpeech(true);
       }
 
       if (isDragging) {
+        // Track velocity (px/ms)
+        const moveDx = clientX - lastPointerRef.current.x;
+        const moveDy = clientY - lastPointerRef.current.y;
+        velocityRef.current = {
+          vx: moveDx / dt,
+          vy: moveDy / dt,
+        };
+
+        // Shake detection: rapid left/right or up/down direction reversals while dragging
+        if (Math.abs(moveDx) > 8) {
+          const currentDir = moveDx > 0 ? 'right' : 'left';
+          if (lastDirectionRef.current && lastDirectionRef.current !== currentDir) {
+            shakeCountRef.current += 1;
+            
+            // If shaken rapidly 3+ times back and forth -> PUSING!
+            if (shakeCountRef.current >= 3) {
+              setMood('dizzy');
+              setSpeechBubble('Waduh... Awans dikocok-kocok pusing banget tujuh keliling!');
+              setShowSpeech(true);
+            }
+          }
+          lastDirectionRef.current = currentDir;
+        }
+
         setPos({
           x: dragRef.current.initialPosX + dx,
           y: dragRef.current.initialPosY + dy,
         });
       }
+
+      lastPointerRef.current = { x: clientX, y: clientY, time: now };
     };
 
     const handlePointerUp = () => {
@@ -191,9 +231,28 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
 
         triggerPause(); // Diem 4 detik setelah dilepas!
 
-        setMood('love');
-        setSpeechBubble('Hehe, terima kasih ya sudah memindahkan aku dengan lembut!');
-        setShowSpeech(true);
+        const throwSpeed = Math.hypot(velocityRef.current.vx, velocityRef.current.vy);
+        const wasShaken = shakeCountRef.current >= 3;
+
+        shakeCountRef.current = 0;
+        lastDirectionRef.current = null;
+
+        if (wasShaken) {
+          // Shaken -> Pusing / Dizzy!
+          setMood('dizzy');
+          setSpeechBubble('Aduh... Awans pusing banget akibat dikocok-kocok!');
+          setShowSpeech(true);
+        } else if (throwSpeed > 0.6) {
+          // Thrown fast -> Marah / Angry!
+          setMood('angry');
+          setSpeechBubble('Aduh! Jangan dilempar-lempar dong! Awans MARAH NIH!');
+          setShowSpeech(true);
+        } else {
+          // Gentle drop -> Sayang / Love!
+          setMood('love');
+          setSpeechBubble('Hehe, terima kasih ya sudah memindahkan Awans dengan lembut!');
+          setShowSpeech(true);
+        }
 
         if (moodResetTimerRef.current) clearTimeout(moodResetTimerRef.current);
         moodResetTimerRef.current = setTimeout(() => {
