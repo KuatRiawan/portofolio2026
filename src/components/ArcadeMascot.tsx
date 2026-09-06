@@ -367,7 +367,12 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
         
         {/* Speech Bubble Above Pet Mascot */}
         {showSpeech && (
-          <div className={`absolute -top-40 -left-14 w-60 p-2.5 rounded-2xl shadow-2xl backdrop-blur-md animate-fade-in text-xs font-fredoka z-50 pointer-events-auto border-2 ${
+          <div
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+            className={`absolute -top-40 -left-14 w-60 p-2.5 rounded-2xl shadow-2xl backdrop-blur-md animate-fade-in text-xs font-fredoka z-50 pointer-events-auto border-2 ${
             mood === 'angry'
               ? 'bg-rose-950/95 text-rose-100 border-rose-500'
               : mood === 'dizzy'
@@ -431,6 +436,8 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
                 onKeyDown={(e) => e.stopPropagation()}
                 placeholder="Tanya Awans..."
                 className="w-full px-2.5 py-1 bg-slate-950/80 border border-slate-700 focus:border-amber-400 text-slate-100 placeholder-slate-400 text-[10px] rounded-lg outline-none font-sans"
@@ -438,7 +445,9 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
               <button
                 type="submit"
                 onClick={(e) => e.stopPropagation()}
-                className="p-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:brightness-110 text-white rounded-lg transition-all font-bold flex items-center justify-center shrink-0 active:scale-95 border border-orange-300 shadow-xs"
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                className="p-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:brightness-110 text-white rounded-lg transition-all font-bold flex items-center justify-center shrink-0 active:scale-95 border border-orange-300 shadow-xs cursor-pointer"
                 title="Kirim pesan ke Awans"
               >
                 <Send className="w-3 h-3" />
