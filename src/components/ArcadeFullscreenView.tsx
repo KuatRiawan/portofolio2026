@@ -12,6 +12,7 @@ interface ArcadeFullscreenViewProps {
   onClawMove: (dx: number) => void;
   onDirectClawMove: (x: number) => void;
   onGrabTrigger: () => void;
+  onClawHitBall?: () => void;
   onCapsuleCaught: (project: ProjectCapsule) => void;
   caughtProjects: ProjectCapsule[];
   onOpenDeskripsiKarya: () => void;
@@ -27,6 +28,7 @@ export const ArcadeFullscreenView: React.FC<ArcadeFullscreenViewProps> = ({
   onClawMove,
   onDirectClawMove,
   onGrabTrigger,
+  onClawHitBall,
   onCapsuleCaught,
   caughtProjects,
   onOpenDeskripsiKarya,
@@ -137,6 +139,7 @@ export const ArcadeFullscreenView: React.FC<ArcadeFullscreenViewProps> = ({
               projects={projects}
               clawState={clawState}
               onClawMove={onDirectClawMove}
+              onClawHitBall={onClawHitBall}
               onCapsuleCaught={onCapsuleCaught}
               caughtProjectIds={caughtProjects.map((p) => p.id)}
               shakeCount={shakeCount}

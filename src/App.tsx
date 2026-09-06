@@ -142,22 +142,59 @@ export function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleClawMove]);
 
+  const grabTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleClawHitBall = useCallback(() => {
+    if (grabTimeoutRef.current) {
+      clearTimeout(grabTimeoutRef.current);
+      grabTimeoutRef.current = null;
+    }
+
+    setClawState((prev) => {
+      if (!prev.isLowering) return prev;
+      return {
+        ...prev,
+        isLowering: false,
+        isOpen: false
+      };
+    });
+
+    setTimeout(() => {
+      setClawState((prev) => ({
+        ...prev,
+        y: 0.15,
+        isRaising: true
+      }));
+
+      setTimeout(() => {
+        setClawState((prev) => ({
+          ...prev,
+          x: 0.15,
+          isRaising: false,
+          isGrabbing: false,
+          isOpen: true,
+          beamActive: false
+        }));
+      }, 800);
+    }, 350);
+  }, []);
+
   // Trigger Claw Lower & Grab Sequence with smooth multi-phase animation
   const executeGrabSequence = () => {
     if (clawState.isGrabbing) return;
     soundFx.playGrabPulse();
 
-    // Step 1: Lower claw down to depth Y: 0.72 IMMEDIATELY
+    // Step 1: Lower claw down to floor Y: 0.76
     setClawState((prev) => ({
       ...prev,
       isGrabbing: true,
       isLowering: true,
       isOpen: true,
-      y: 0.72
+      y: 0.76
     }));
 
-    // Step 2: Reach depth (800ms) & Close prongs to grab capsule
-    setTimeout(() => {
+    // Step 2: If reaches floor without hitting high ball (850ms)
+    grabTimeoutRef.current = setTimeout(() => {
       setClawState((prev) => ({
         ...prev,
         isOpen: false,
@@ -244,6 +281,7 @@ export function App() {
           onClawMove={handleClawMove}
           onDirectClawMove={handleDirectClawMove}
           onGrabTrigger={executeGrabSequence}
+          onClawHitBall={handleClawHitBall}
           onCapsuleCaught={handleCapsuleCaught}
           caughtProjects={caughtProjects}
           onOpenDeskripsiKarya={() => setIsRakCapitOpen(true)}

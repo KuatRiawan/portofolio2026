@@ -17,6 +17,7 @@ interface MesinChamberCanvasProps {
   projects: ProjectCapsule[];
   clawState: ClawState;
   onClawMove: (x: number, y: number) => void;
+  onClawHitBall?: () => void;
   onCapsuleCaught: (project: ProjectCapsule) => void;
   caughtProjectIds: string[];
   shakeCount?: number;
@@ -25,7 +26,8 @@ interface MesinChamberCanvasProps {
 export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
   projects,
   clawState,
-  onClawMove,
+  onClawMove: _onClawMove,
+  onClawHitBall,
   onCapsuleCaught,
   caughtProjectIds,
   shakeCount = 0
@@ -39,16 +41,36 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
 
   // Phone Gyroscope / Tilt Sensor Ref & State
   const tiltXRef = useRef<number>(0);
-  const [isGyroActive, setIsGyroActive] = useState<boolean>(false);
+  const [, setIsGyroActive] = useState<boolean>(false);
 
   const clawStateRef = useRef<ClawState>(clawState);
   const grabbedProjectRef = useRef<ProjectCapsule | null>(null);
+
+  // Helper to request iOS Motion & Orientation permissions on user interaction
+  const requestSensorPermission = () => {
+    if (typeof window === 'undefined') return;
+
+    if (
+      typeof DeviceOrientationEvent !== 'undefined' &&
+      typeof (DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }).requestPermission === 'function'
+    ) {
+      (DeviceOrientationEvent as unknown as { requestPermission: () => Promise<string> }).requestPermission().then((res) => {
+        if (res === 'granted') setIsGyroActive(true);
+      }).catch(() => {});
+    }
+
+    if (
+      typeof DeviceMotionEvent !== 'undefined' &&
+      typeof (DeviceMotionEvent as unknown as { requestPermission?: () => Promise<string> }).requestPermission === 'function'
+    ) {
+      (DeviceMotionEvent as unknown as { requestPermission: () => Promise<string> }).requestPermission().catch(() => {});
+    }
+  };
 
   // Device Orientation (Phone Tilt Gyroscope Sensor) Listener
   useEffect(() => {
     const handleOrientation = (e: DeviceOrientationEvent) => {
       if (e.gamma !== null && e.gamma !== undefined) {
-        // gamma is left/right tilt angle in degrees (-90 to +90)
         const tilt = Math.max(-1, Math.min(1, e.gamma / 25));
         tiltXRef.current = tilt;
         if (Math.abs(e.gamma) > 3) {
@@ -63,6 +85,54 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
     return () => {
       if (typeof window !== 'undefined' && 'DeviceOrientationEvent' in window) {
         window.removeEventListener('deviceorientation', handleOrientation);
+      }
+    };
+  }, []);
+
+  // Device Motion Sensor Listener for Physical Phone Shaking (Kocok HP)
+  useEffect(() => {
+    let lastX = 0;
+    let lastY = 0;
+    let lastZ = 0;
+    let lastTime = Date.now();
+
+    const handleMotion = (e: DeviceMotionEvent) => {
+      const acc = e.accelerationIncludingGravity || e.acceleration;
+      if (!acc) return;
+
+      const currentTime = Date.now();
+      if (currentTime - lastTime > 90) {
+        const diffTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        const x = acc.x || 0;
+        const y = acc.y || 0;
+        const z = acc.z || 0;
+
+        const speed = (Math.abs(x + y + z - lastX - lastY - lastZ) / diffTime) * 10000;
+
+        if (speed > 750) {
+          // Physical Phone Shake detected -> Toss balls upward!
+          itemsRef.current.forEach((item) => {
+            item.vy = -(0.06 + Math.random() * 0.09);
+            item.vx = (Math.random() - 0.5) * 0.08;
+            item.rotationVel = (Math.random() - 0.5) * 0.15;
+          });
+          soundFx.playMoveWhirr();
+        }
+
+        lastX = x;
+        lastY = y;
+        lastZ = z;
+      }
+    };
+
+    if (typeof window !== 'undefined' && 'DeviceMotionEvent' in window) {
+      window.addEventListener('devicemotion', handleMotion);
+    }
+    return () => {
+      if (typeof window !== 'undefined' && 'DeviceMotionEvent' in window) {
+        window.removeEventListener('devicemotion', handleMotion);
       }
     };
   }, []);
@@ -82,7 +152,7 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
 
   const caughtIdsKey = caughtProjectIds.join(',');
 
-  // Initialize ALL 15 Project Capsules resting ON THE FLOOR PILE (No Floating)
+  // Initialize ALL 15 Project Capsules resting ON THE FLOOR PILE
   useEffect(() => {
     const remainingProjects = projects.filter(
       (p) => !caughtProjectIds.includes(p.id) || grabbedProjectRef.current?.id === p.id
@@ -97,10 +167,9 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
         return existing;
       }
 
-      const row = Math.floor(idx / itemsPerRow); // 0 (bottom floor), 1, 2
+      const row = Math.floor(idx / itemsPerRow);
       const col = idx % itemsPerRow;
 
-      // Floor pile coordinates: Row 0 rests directly at floor y: 0.80
       const baseY = 0.80 - row * 0.055;
       const rowOffset = (row % 2) * 0.06;
       const baseX = 0.16 + col * 0.16 + rowOffset;
@@ -120,13 +189,12 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
     itemsRef.current = updatedItems;
   }, [projects, caughtIdsKey]);
 
-  // Handle SHAKE event trigger (KOCOK MESIN)
+  // Handle SHAKE event trigger (KOCOK MESIN button)
   useEffect(() => {
     if (shakeCount > prevShakeCountRef.current) {
       prevShakeCountRef.current = shakeCount;
-      shakeTimerRef.current = 45; // 45 frames of shake vibration (~0.75 sec)
+      shakeTimerRef.current = 45;
 
-      // Apply explosive upward & sideways velocity to all balls
       itemsRef.current.forEach((item) => {
         item.vy = -(0.06 + Math.random() * 0.09);
         item.vx = (Math.random() - 0.5) * 0.08;
@@ -144,14 +212,14 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
 
     const getVibrantColor = (idx: number, color?: string) => {
       const defaultColors = [
-        '#ff4757', // Coral Red
-        '#ff9f43', // Warm Gold Orange
-        '#00d2d3', // Electric Cyan
-        '#10ac84', // Emerald Green
-        '#5f27cd', // Deep Purple
-        '#ff6b81', // Neon Pink
-        '#54a0ff', // Sky Blue
-        '#feca57'  // Bright Yellow
+        '#ff4757',
+        '#ff9f43',
+        '#00d2d3',
+        '#10ac84',
+        '#5f27cd',
+        '#ff6b81',
+        '#54a0ff',
+        '#feca57'
       ];
       return color || defaultColors[idx % defaultColors.length];
     };
@@ -247,10 +315,9 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
         ctx.ellipse(clawPixelX, height * 0.84, 14, 4, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // 3. Sub-step Physics Simulation for Rigid Body Balls (Gravity, Bounce, Tilt Sensor & Circle Anti-Overlap)
+        // 3. Sub-step Physics Simulation for Rigid Body Balls
         const items = itemsRef.current;
         const subSteps = 2;
-        // Dynamic responsive radius: ~20px on mobile 360px, up to 24px on desktop
         const radius = Math.min(24, Math.max(16, width * 0.052));
 
         for (let step = 0; step < subSteps; step++) {
@@ -280,7 +347,7 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
             item.vy *= 0.98;
             item.rotationVel *= 0.95;
 
-            // Floor boundary (yFloor ~ 0.80)
+            // Floor boundary
             const floorY = 0.80;
             if (item.y > floorY) {
               item.y = floorY;
@@ -330,7 +397,7 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
           });
         }
 
-        // 4. Render Authentic Japanese Gachapon 3D Capsules
+        // 4. Render Authentic Japanese Gachapon 3D Capsules (No ground shadow)
         items.forEach((item, idx) => {
           const ix = item.x * width;
           const iy = item.y * height;
@@ -365,7 +432,7 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
           ctx.fillStyle = '#0f172a';
           ctx.fillRect(-capRad + 1, -3, (capRad - 1) * 2, 6);
 
-          // 4. CENTER METALLIC SILVER PUSH-BUTTON (Tombol Perak Gachapon)
+          // 4. CENTER METALLIC SILVER PUSH-BUTTON
           ctx.fillStyle = '#0f172a';
           ctx.beginPath();
           ctx.arc(0, 0, 7, 0, Math.PI * 2);
@@ -381,7 +448,7 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
           ctx.arc(-1, -1, 1.5, 0, Math.PI * 2);
           ctx.fill();
 
-          // 5. Specular Crescent Arc Highlight (High-Gloss Plastic Shine)
+          // 5. Specular Crescent Arc Highlight
           ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
           ctx.beginPath();
           ctx.ellipse(-capRad * 0.3, -capRad * 0.5, capRad * 0.4, capRad * 0.15, -0.35, 0, Math.PI * 2);
@@ -389,20 +456,26 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
 
           ctx.restore();
 
-          // Check claw grab suction
+          // Check claw grab suction - Stop lowering immediately on ball contact!
           const distToClaw = Math.hypot(ix - clawPixelX, iy - (clawPixelY + 30));
           if (currentClawState.isGrabbing && !currentClawState.hasCapsule && distToClaw < 55) {
             currentClawState.hasCapsule = true;
             currentClawState.grabbedCapsuleId = item.id;
             grabbedProjectRef.current = item.project;
             soundFx.playVictoryFanfare();
+            if (onClawHitBall) {
+              onClawHitBall();
+            }
           }
         });
 
         // 5. HIGH-TECH METALLIC ROBOTIC STEEL CLAW MECHANISM
+        // Responsive Claw Scaling for Mobile screens
+        const clawScale = Math.min(1.0, Math.max(0.72, width / 520));
+
         // Top Steel Cable
         ctx.strokeStyle = '#475569';
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 4 * clawScale;
         ctx.beginPath();
         ctx.moveTo(clawPixelX, 0);
         ctx.lineTo(clawPixelX, clawPixelY);
@@ -410,6 +483,7 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
 
         ctx.save();
         ctx.translate(clawPixelX, clawPixelY);
+        ctx.scale(clawScale, clawScale);
 
         if (currentClawState.hasCapsule || currentClawState.isGrabbing) {
           const grabGlow = ctx.createRadialGradient(0, 30, 5, 0, 30, 50);
@@ -422,7 +496,7 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
           ctx.fill();
         }
 
-        // Heavy Metallic Top Motor Housing Cylinder (Polished Steel)
+        // Heavy Metallic Top Motor Housing Cylinder
         const motorGrad = ctx.createLinearGradient(-24, 0, 24, 0);
         motorGrad.addColorStop(0, '#334155');
         motorGrad.addColorStop(0.3, '#94a3b8');
@@ -508,36 +582,15 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
     return () => {
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
-  }, [onCapsuleCaught]);
+  }, [onCapsuleCaught, onClawHitBall]);
 
-  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const normX = Math.max(0.15, Math.min(0.85, mx / rect.width));
-    onClawMove(normX, 0.14);
-    soundFx.playMoveWhirr();
+  // Touch & Click on canvas request iOS sensor permissions ONLY (Does NOT move claw - Joystick ONLY navigation)
+  const handleCanvasClick = () => {
+    requestSensorPermission();
   };
 
-  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas || e.touches.length === 0) return;
-    const rect = canvas.getBoundingClientRect();
-    const touchX = e.touches[0].clientX - rect.left;
-    const normX = Math.max(0.15, Math.min(0.85, touchX / rect.width));
-    onClawMove(normX, 0.14);
-    soundFx.playMoveWhirr();
-
-    // Trigger iOS permission for DeviceOrientation if required on touch
-    if (
-      typeof window !== 'undefined' &&
-      typeof (DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }).requestPermission === 'function'
-    ) {
-      (DeviceOrientationEvent as unknown as { requestPermission: () => Promise<string> }).requestPermission().then((res) => {
-        if (res === 'granted') setIsGyroActive(true);
-      }).catch(() => {});
-    }
+  const handleTouchMove = () => {
+    requestSensorPermission();
   };
 
   const [showTiltHint, setShowTiltHint] = useState<boolean>(true);
@@ -551,30 +604,24 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
 
   return (
     <div className="relative w-full h-[360px] xs:h-[400px] sm:h-[440px] md:h-[480px] lg:h-[520px] rounded-2xl sm:rounded-3xl overflow-hidden border-2 sm:border-4 border-slate-300 bg-sky-200 shadow-xl group">
-      {/* Mobile Tilt / Shake Sensor Notification Hint Banner */}
+      {/* Mobile Motion & Tilt Sensor Notification Hint Banner */}
       {showTiltHint && (
         <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 w-[92%] max-w-xs bg-slate-900/95 text-white border-2 border-amber-400 p-2.5 rounded-2xl shadow-2xl backdrop-blur-md flex items-center justify-between gap-2 animate-bounce">
-          <div className="flex items-center space-x-2 text-xs font-fredoka font-bold">
-            <span className="text-xl">📱</span>
-            <div>
-              <span className="text-amber-400 block text-[11px] font-black uppercase tracking-wider">SENSOR GERAK HP</span>
-              <span className="text-slate-200 text-[10px] leading-tight block">Miringkan / goyang HP kamu ke kanan-kiri untuk mengacak posisi bola! 🎯</span>
-            </div>
+          <div className="text-xs font-fredoka font-bold">
+            <span className="text-amber-400 block text-[11px] font-black uppercase tracking-wider">SENSOR GERAK HP</span>
+            <span className="text-slate-200 text-[10px] leading-tight block">Miringkan atau kocok HP kamu untuk mengacak posisi bola.</span>
           </div>
           <button
-            onClick={() => setShowTiltHint(false)}
-            className="text-slate-400 hover:text-white text-xs font-extrabold px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 shrink-0 active:scale-95"
+            onClick={() => {
+              requestSensorPermission();
+              setShowTiltHint(false);
+            }}
+            className="text-slate-400 hover:text-white text-xs font-extrabold px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 shrink-0 active:scale-95"
           >
             OK
           </button>
         </div>
       )}
-
-      {/* Gyroscope Sensor Status Badge Indicator */}
-      <div className="absolute top-2.5 right-2.5 z-10 px-2.5 py-1 rounded-full bg-slate-900/80 border border-slate-700 text-[10px] sm:text-xs font-mono font-bold text-slate-200 flex items-center gap-1.5 shadow-md pointer-events-none backdrop-blur-xs">
-        <span className={`w-2 h-2 rounded-full ${isGyroActive ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-        <span>{isGyroActive ? '📱 Sensor Gyro: AKTIF' : '📱 Miringkan HP ↔️'}</span>
-      </div>
 
       <canvas
         ref={canvasRef}
