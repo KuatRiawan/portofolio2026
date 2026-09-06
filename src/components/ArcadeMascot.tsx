@@ -10,7 +10,7 @@ type MascotMood = 'happy' | 'angry' | 'surprised' | 'love' | 'sleepy';
 
 export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) => {
   // Coordinates relative to profile card container
-  const [pos, setPos] = useState<{ x: number; y: number }>({ x: 220, y: -40 });
+  const [pos, setPos] = useState<{ x: number; y: number }>({ x: 220, y: -25 });
   const [direction, setDirection] = useState<'right' | 'left'>('left');
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isJumping, setIsJumping] = useState<boolean>(false);
@@ -26,7 +26,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
     startX: 0,
     startY: 0,
     initialPosX: 220,
-    initialPosY: -40,
+    initialPosY: -25,
   });
 
   const clickResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -239,7 +239,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
   return (
     <div
       className={`absolute transition-all ${
-        isDragging ? 'duration-0 z-50 scale-110 cursor-grabbing' : 'duration-700 ease-in-out z-10 cursor-grab'
+        isDragging ? 'duration-0 z-50 scale-110 cursor-grabbing' : 'duration-700 ease-in-out z-30 cursor-grab'
       } select-none pointer-events-auto`}
       style={{
         transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
