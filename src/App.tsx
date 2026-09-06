@@ -7,6 +7,7 @@ import { ArcadeLoadingOverlay } from './components/ArcadeLoadingOverlay';
 import { ArcadeFullscreenView } from './components/ArcadeFullscreenView';
 import { ProjectModal } from './components/ProjectModal';
 import { RakCapitModal } from './components/RakCapitModal';
+import { ArcadeMascot } from './components/ArcadeMascot';
 import { soundFx } from './services/soundEffects';
 import { useApp } from './context/AppContext';
 
@@ -310,6 +311,9 @@ export function App() {
               onSelectProject={(proj) => setSelectedProject(proj)}
             />
           </main>
+
+          {/* Interactive Animated Arcade Robot Mascot (ClawBot) */}
+          <ArcadeMascot onScrollToArcade={handleOpenArcadeFullscreen} />
 
           {/* Global Landing Footer */}
           <footer className={`border-t py-10 text-center text-xs font-mono space-y-3 transition-colors duration-300 ${theme === 'light' ? 'bg-slate-200/80 border-slate-300 text-slate-600' : 'bg-slate-950 border-slate-800/80 text-slate-500'}`}>
