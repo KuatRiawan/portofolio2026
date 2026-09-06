@@ -7,7 +7,6 @@ import {
 import { PROJECTS_DATA } from '../data/projectsData';
 import type { ProjectCapsule } from '../types/portfolio';
 import { TechLogo } from './TechLogos';
-import { ArcadeMascot } from './ArcadeMascot';
 import { useApp } from '../context/AppContext';
 
 interface LandingSectionsProps {
