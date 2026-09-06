@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, Gamepad2, X, Heart, RotateCw, CloudRain, AlertCircle, Moon, Flame } from 'lucide-react';
+import { Sparkles, X, Heart, RotateCw, CloudRain, AlertCircle, Moon, Flame, Send } from 'lucide-react';
 import { soundFx } from '../services/soundEffects';
 
 interface ArcadeMascotProps {
@@ -8,7 +8,7 @@ interface ArcadeMascotProps {
 
 type MascotMood = 'happy' | 'angry' | 'dizzy' | 'sad' | 'surprised' | 'love' | 'sleepy';
 
-export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) => {
+export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
   // Coordinates relative to profile card container
   const [pos, setPos] = useState<{ x: number; y: number }>({ x: 220, y: -25 });
   const [direction, setDirection] = useState<'right' | 'left'>('left');
@@ -22,8 +22,9 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
   // Emotional Mood Engine (happy, angry, dizzy, sad, surprised, love, sleepy)
   const [mood, setMood] = useState<MascotMood>('happy');
   
-  const [speechBubble, setSpeechBubble] = useState<string>('Halo! Aku Awans, tarik atau geser aku atau klik aku!');
+  const [speechBubble, setSpeechBubble] = useState<string>('Halo! Aku Awans, ketik pesan atau tanya apa saja di sini!');
   const [showSpeech, setShowSpeech] = useState<boolean>(true);
+  const [chatInput, setChatInput] = useState<string>('');
 
   const dragRef = useRef<{ startX: number; startY: number; initialPosX: number; initialPosY: number }>({
     startX: 0,
@@ -65,13 +66,59 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
     'Kuat Riawan siap diajak berkembang dan kerja sebagai Full-Stack Web Dev!'
   ];
 
+  // Handle Interactive Chat Submission
+  const handleChatSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!chatInput.trim()) return;
+
+    soundFx.playGrabPulse();
+    setIsJumping(true);
+    setTimeout(() => setIsJumping(false), 500);
+
+    triggerPause(); // Diem 5 detik untuk baca jawaban
+
+    const msg = chatInput.toLowerCase().trim();
+    setChatInput('');
+
+    let reply = '';
+    if (msg.includes('proyek') || msg.includes('project') || msg.includes('karya') || msg.includes('nuraga')) {
+      setMood('happy');
+      reply = 'Proyek utama Kuat Riawan adalah NURAGA AI Platform K3 dengan WA Gateway & Analytics!';
+    } else if (msg.includes('skill') || msg.includes('kemampuan') || msg.includes('bisa') || msg.includes('bahasa')) {
+      setMood('love');
+      reply = 'Kuat Riawan menguasai React, Node.js, TypeScript, Python, BigQuery & Otomasi AI!';
+    } else if (msg.includes('kontak') || msg.includes('email') || msg.includes('wa') || msg.includes('hubungi')) {
+      setMood('happy');
+      reply = 'Kontak Kuat Riawan: kuatriawan69@gmail.com | WA: +62 821-2428-9987!';
+    } else if (msg.includes('dicoding') || msg.includes('kuliah') || msg.includes('pendidikan') || msg.includes('ut')) {
+      setMood('happy');
+      reply = 'Kuat Riawan lulus Beasiswa Dicoding 2026 Distinction & S1 Sistem Informasi Terbuka!';
+    } else if (msg.includes('siapa') || msg.includes('nama') || msg.includes('awans')) {
+      setMood('love');
+      reply = 'Aku Awans, maskot robot AI portofolio Kuat Riawan! Salam kenal ya!';
+    } else if (msg.includes('marah') || msg.includes('kesel') || msg.includes('jahat')) {
+      setMood('sad');
+      reply = 'Jangan galak-galak dong, Awans kan robot baik hati...';
+    } else if (msg.includes('lucu') || msg.includes('keren') || msg.includes('hebat') || msg.includes('suka')) {
+      setMood('love');
+      reply = 'Makasih banyak ya! Awans makin sayang sama kamu!';
+    } else {
+      setMood('happy');
+      reply = `Awans paham! "${chatInput}" -> Kuat Riawan siap diajak berkembang & kerja sebagai Web Dev!`;
+    }
+
+    setSpeechBubble(reply);
+    setShowSpeech(true);
+  };
+
   // Pause movement for 4 seconds (diem 4 detik)
   const triggerPause = () => {
     setIsPaused(true);
     if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current);
     pauseTimerRef.current = setTimeout(() => {
       setIsPaused(false);
-    }, 4000);
+    }, 5000);
   };
 
   // Active Walking & Wandering Movement Loop (Paused if isPaused)
@@ -320,7 +367,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
         
         {/* Speech Bubble Above Pet Mascot */}
         {showSpeech && (
-          <div className={`absolute -top-36 -left-14 w-56 p-2.5 rounded-2xl shadow-2xl backdrop-blur-md animate-fade-in text-xs font-fredoka z-50 pointer-events-auto border-2 ${
+          <div className={`absolute -top-40 -left-14 w-60 p-2.5 rounded-2xl shadow-2xl backdrop-blur-md animate-fade-in text-xs font-fredoka z-50 pointer-events-auto border-2 ${
             mood === 'angry'
               ? 'bg-rose-950/95 text-rose-100 border-rose-500'
               : mood === 'dizzy'
@@ -338,19 +385,19 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
             <div className="flex items-center justify-between gap-1 mb-1">
               <div className="flex items-center space-x-1 text-[10px] font-bold uppercase tracking-wider">
                 {mood === 'angry' ? (
-                  <Flame className="w-3 h-3 text-rose-400" />
+                  <Flame className="w-3.5 h-3.5 text-rose-400" />
                 ) : mood === 'dizzy' ? (
-                  <RotateCw className="w-3 h-3 text-amber-400 animate-spin" />
+                  <RotateCw className="w-3.5 h-3.5 text-amber-400 animate-spin" />
                 ) : mood === 'sad' ? (
-                  <CloudRain className="w-3 h-3 text-blue-400" />
+                  <CloudRain className="w-3.5 h-3.5 text-blue-400" />
                 ) : mood === 'love' ? (
-                  <Heart className="w-3 h-3 text-pink-400 fill-pink-400" />
+                  <Heart className="w-3.5 h-3.5 text-pink-400 fill-pink-400" />
                 ) : mood === 'surprised' ? (
-                  <AlertCircle className="w-3 h-3 text-yellow-400" />
+                  <AlertCircle className="w-3.5 h-3.5 text-yellow-400" />
                 ) : mood === 'sleepy' ? (
-                  <Moon className="w-3 h-3 text-indigo-400" />
+                  <Moon className="w-3.5 h-3.5 text-indigo-400" />
                 ) : (
-                  <Sparkles className="w-3 h-3 text-amber-400" />
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 )}
                 <span className={
                   mood === 'angry' ? 'text-rose-400' :
@@ -361,7 +408,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
                   mood === 'sleepy' ? 'text-indigo-300' :
                   'text-amber-400'
                 }>
-                  Awans
+                  Awans AI Chat
                 </span>
               </div>
               <button
@@ -375,20 +422,28 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
               </button>
             </div>
             
-            <p className="leading-snug text-[11px]">{speechBubble}</p>
+            <p className="leading-snug text-[11px] mb-2">{speechBubble}</p>
 
-            {onScrollToArcade && (
+            {/* Interactive AI Chat Input Column */}
+            <form onSubmit={handleChatSubmit} className="flex items-center gap-1">
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+                placeholder="Tanya Awans..."
+                className="w-full px-2.5 py-1 bg-slate-950/80 border border-slate-700 focus:border-amber-400 text-slate-100 placeholder-slate-400 text-[10px] rounded-lg outline-none font-sans"
+              />
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onScrollToArcade();
-                }}
-                className="mt-2 w-full py-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-[10px] rounded-lg border border-orange-300 flex items-center justify-center space-x-1 hover:brightness-110 active:scale-95 transition-all shadow-xs"
+                type="submit"
+                onClick={(e) => e.stopPropagation()}
+                className="p-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:brightness-110 text-white rounded-lg transition-all font-bold flex items-center justify-center shrink-0 active:scale-95 border border-orange-300 shadow-xs"
+                title="Kirim pesan ke Awans"
               >
-                <Gamepad2 className="w-3 h-3" />
-                <span>Mainkan Capit Karya!</span>
+                <Send className="w-3 h-3" />
               </button>
-            )}
+            </form>
 
             {/* Speech Pointer Arrow */}
             <div className={`absolute -bottom-2 left-20 w-3.5 h-3.5 border-b-2 border-r-2 rotate-45 ${
