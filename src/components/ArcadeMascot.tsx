@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, Gamepad2, X, Move, Frown, Heart, RotateCw, CloudRain, AlertCircle, Moon, Flame } from 'lucide-react';
+import { Sparkles, Gamepad2, X, Move, Heart, RotateCw, CloudRain, AlertCircle, Moon, Flame } from 'lucide-react';
 import { soundFx } from '../services/soundEffects';
 
 interface ArcadeMascotProps {
