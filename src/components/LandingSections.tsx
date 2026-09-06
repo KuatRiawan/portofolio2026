@@ -87,14 +87,16 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onScrollToArca
                 <span>{t.heroTag}</span>
               </div>
 
-              <h1 className={`text-4xl sm:text-5xl lg:text-6xl font-black font-fredoka leading-tight tracking-tight ${
-                isLight ? 'text-slate-900' : 'text-white'
-              }`}>
-                {t.greetingPrefix}{' '}
-                <span className="gradient-text-orange">
-                  Kuat Riawan
-                </span>
-              </h1>
+              <div className="min-h-[110px] xs:min-h-[120px] sm:min-h-[140px] lg:min-h-[160px] flex items-center">
+                <h1 className={`text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-black font-fredoka leading-tight tracking-tight ${
+                  isLight ? 'text-slate-900' : 'text-white'
+                }`}>
+                  {t.greetingPrefix}{' '}
+                  <span className="gradient-text-orange border-r-4 border-orange-500 pr-1 animate-pulse">
+                    {displayText}
+                  </span>
+                </h1>
+              </div>
 
               <p className={`text-base sm:text-lg leading-relaxed font-sans max-w-2xl ${
                 isLight ? 'text-slate-600' : 'text-slate-300'
