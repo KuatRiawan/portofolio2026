@@ -67,9 +67,9 @@ export function App() {
   // Claw State
   const [clawState, setClawState] = useState<ClawState>({
     x: 0.5,
-    y: 0.22,
+    y: 0.15,
     targetX: 0.5,
-    targetY: 0.22,
+    targetY: 0.15,
     isOpen: true,
     isLowering: false,
     isRaising: false,
@@ -164,11 +164,11 @@ export function App() {
         isLowering: false
       }));
 
-      // Step 3: Raise claw back up to top Y: 0.18 (400ms pause + 800ms lift)
+      // Step 3: Raise claw back up to top Y: 0.15 (400ms pause + 800ms lift)
       setTimeout(() => {
         setClawState((prev) => ({
           ...prev,
-          y: 0.18,
+          y: 0.15,
           isRaising: true
         }));
 
