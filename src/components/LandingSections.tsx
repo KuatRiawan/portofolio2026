@@ -92,7 +92,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onScrollToArca
                   isLight ? 'text-slate-900' : 'text-white'
                 }`}>
                   {t.greetingPrefix}{' '}
-                  <span className="gradient-text-orange border-r-4 border-orange-500 pr-1 animate-pulse">
+                  <span className="gradient-text-orange border-r-4 border-orange-500 pr-1">
                     {displayText}
                   </span>
                 </h1>
