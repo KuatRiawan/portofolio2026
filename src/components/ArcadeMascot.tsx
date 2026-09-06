@@ -39,6 +39,18 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
   const clickResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const moodResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const moodList: MascotMood[] = ['happy', 'dizzy', 'sad', 'angry', 'surprised', 'love', 'sleepy'];
+  
+  const moodQuotes: Record<MascotMood, string> = {
+    happy: 'Halo! Awans lagi senang hari ini!',
+    dizzy: 'Waduh! Awans pusing banget tujuh keliling diklik terus-terusan!',
+    sad: 'Huuu... Awans sedih banget, jangan dijailin terus dong...',
+    angry: 'Aduh! Awans MARAH NIH! Jangan diganggu terus!',
+    surprised: 'WAAA! Awans kaget banget!',
+    love: 'Hehe, Awans sayang banget sama kamu!',
+    sleepy: 'Zzz... Awans lagi ngantuk mau tidur...',
+  };
+
   const mascotQuotes = [
     'Ssshh... Aku ngumpet di belakang kartu profil Kuat Riawan!',
     'Kamu bisa angkat dan geser aku ke mana saja lho!',
@@ -217,62 +229,21 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
     };
   }, [isDragging, pos]);
 
-  // Click & Emotional Reaction Logic! (Ekspresi: Senang, Pusing, Sedih, Marah, Sayang, Kaget, Tidur)
+  // Click & Emotional Reaction Logic: Cycles through all 7 moods sequentially!
   const triggerMascotClick = () => {
     soundFx.playGrabPulse();
 
     setIsJumping(true);
     setTimeout(() => setIsJumping(false), 500);
 
-    // Diem dulu 4 detik saat diklik!
-    triggerPause();
+    triggerPause(); // Diem dulu 4 detik saat diklik!
 
-    const nextCount = clickCount + 1;
-    setClickCount(nextCount);
+    const nextIndex = (moodList.indexOf(mood) + 1) % moodList.length;
+    const nextMood = moodList[nextIndex];
 
-    if (clickResetTimerRef.current) clearTimeout(clickResetTimerRef.current);
-    clickResetTimerRef.current = setTimeout(() => {
-      setClickCount(0);
-    }, 4000);
-
-    if (moodResetTimerRef.current) clearTimeout(moodResetTimerRef.current);
-
-    // Cycle through rich emotional reactions based on click count & mood:
-    if (mood === 'angry') {
-      // Petting while angry -> calms down into love
-      setMood('love');
-      setSpeechBubble('Makasih ya sudah mengelus Awans, Awans gak marah lagi deh!');
-      setShowSpeech(true);
-      moodResetTimerRef.current = setTimeout(() => setMood('happy'), 4000);
-    } else if (nextCount === 1) {
-      // 1st click: Happy / Senang
-      setMood('happy');
-      const q = mascotQuotes[Math.floor(Math.random() * mascotQuotes.length)];
-      setSpeechBubble(q);
-      setShowSpeech(true);
-    } else if (nextCount === 2) {
-      // 2nd click: Dizzy / Pusing!
-      setMood('dizzy');
-      setSpeechBubble('Waduh! Awans pusing banget diklik terus-terusan nih!');
-      setShowSpeech(true);
-      moodResetTimerRef.current = setTimeout(() => setMood('happy'), 4000);
-    } else if (nextCount === 3) {
-      // 3rd click: Sad / Sedih...
-      setMood('sad');
-      setSpeechBubble('Huuu... Awans sedih, jangan dijailin terus dong...');
-      setShowSpeech(true);
-      moodResetTimerRef.current = setTimeout(() => setMood('happy'), 4500);
-    } else if (nextCount >= 4) {
-      // 4th+ click: Angry / Marah!
-      setMood('angry');
-      setSpeechBubble('Aduh! Awans MARAH NIH! Jangan diganggu terus dong!');
-      setShowSpeech(true);
-
-      moodResetTimerRef.current = setTimeout(() => {
-        setMood('happy');
-        setClickCount(0);
-      }, 5000);
-    }
+    setMood(nextMood);
+    setSpeechBubble(moodQuotes[nextMood]);
+    setShowSpeech(true);
   };
 
   return (
@@ -355,7 +326,54 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
               </button>
             </div>
             
-            <p className="leading-snug text-[11px]">{speechBubble}</p>
+            <p className="leading-snug text-[11px] mb-1.5">{speechBubble}</p>
+
+            {/* Quick Expression Tester Bar */}
+            <div className="pt-1.5 border-t border-slate-700/60 flex items-center gap-1 overflow-x-auto text-[9px] no-scrollbar">
+              <span className="text-slate-400 font-bold shrink-0">Tes:</span>
+              <button
+                onClick={(e) => { e.stopPropagation(); setMood('happy'); setSpeechBubble(moodQuotes.happy); triggerPause(); }}
+                className={`px-1.5 py-0.5 rounded font-bold transition-all shrink-0 ${mood === 'happy' ? 'bg-cyan-500 text-slate-950 scale-105' : 'bg-slate-800 text-cyan-300 hover:bg-slate-700'}`}
+              >
+                Senang
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setMood('dizzy'); setSpeechBubble(moodQuotes.dizzy); triggerPause(); }}
+                className={`px-1.5 py-0.5 rounded font-bold transition-all shrink-0 ${mood === 'dizzy' ? 'bg-amber-500 text-slate-950 scale-105' : 'bg-slate-800 text-amber-300 hover:bg-slate-700'}`}
+              >
+                Pusing
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setMood('sad'); setSpeechBubble(moodQuotes.sad); triggerPause(); }}
+                className={`px-1.5 py-0.5 rounded font-bold transition-all shrink-0 ${mood === 'sad' ? 'bg-blue-500 text-white scale-105' : 'bg-slate-800 text-blue-300 hover:bg-slate-700'}`}
+              >
+                Sedih
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setMood('angry'); setSpeechBubble(moodQuotes.angry); triggerPause(); }}
+                className={`px-1.5 py-0.5 rounded font-bold transition-all shrink-0 ${mood === 'angry' ? 'bg-rose-500 text-white scale-105' : 'bg-slate-800 text-rose-300 hover:bg-slate-700'}`}
+              >
+                Marah
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setMood('surprised'); setSpeechBubble(moodQuotes.surprised); triggerPause(); }}
+                className={`px-1.5 py-0.5 rounded font-bold transition-all shrink-0 ${mood === 'surprised' ? 'bg-yellow-500 text-slate-950 scale-105' : 'bg-slate-800 text-yellow-300 hover:bg-slate-700'}`}
+              >
+                Kaget
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setMood('love'); setSpeechBubble(moodQuotes.love); triggerPause(); }}
+                className={`px-1.5 py-0.5 rounded font-bold transition-all shrink-0 ${mood === 'love' ? 'bg-pink-500 text-white scale-105' : 'bg-slate-800 text-pink-300 hover:bg-slate-700'}`}
+              >
+                Sayang
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setMood('sleepy'); setSpeechBubble(moodQuotes.sleepy); triggerPause(); }}
+                className={`px-1.5 py-0.5 rounded font-bold transition-all shrink-0 ${mood === 'sleepy' ? 'bg-indigo-500 text-white scale-105' : 'bg-slate-800 text-indigo-300 hover:bg-slate-700'}`}
+              >
+                Tidur
+              </button>
+            </div>
 
             {onScrollToArcade && (
               <button
