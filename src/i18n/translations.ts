@@ -36,8 +36,8 @@ export const translations = {
     expBadgeCompany: 'PT Upaya Riksa Patra',
 
     // Stats
-    statGpaLabel: 'IPK S1 Sistem Informasi',
-    statGpaSub: 'Universitas Terbuka',
+    statGpaLabel: 'Proyek Web & AI',
+    statGpaSub: 'React, Node.js, AWS & Python',
     statCertsLabel: 'Sertifikat Resmi',
     statCertsSub: 'Dicoding 2026 & AWS Cloud',
     statDatabaseLabel: 'Database Peserta K3',
@@ -152,8 +152,8 @@ export const translations = {
     expBadgeCompany: 'PT Upaya Riksa Patra',
 
     // Stats
-    statGpaLabel: 'Information Systems GPA',
-    statGpaSub: 'Universitas Terbuka',
+    statGpaLabel: 'Web & AI Projects',
+    statGpaSub: 'React, Node.js, AWS & Python',
     statCertsLabel: 'Official Certificates',
     statCertsSub: 'Dicoding 2026 & AWS Cloud',
     statDatabaseLabel: 'HSE Trainee Database',

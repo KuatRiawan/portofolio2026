@@ -250,7 +250,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onScrollToArca
         }`}>
           
           <div className="space-y-1">
-            <div className="text-3xl font-black font-fredoka text-amber-500">3.50</div>
+            <div className="text-3xl font-black font-fredoka text-amber-500">15+</div>
             <div className={`text-xs font-bold font-fredoka ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>{t.statGpaLabel}</div>
             <div className={`text-[10px] font-mono ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>{t.statGpaSub}</div>
           </div>
