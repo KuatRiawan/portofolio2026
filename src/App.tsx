@@ -144,16 +144,18 @@ export function App() {
 
   const grabTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleClawHitBall = useCallback(() => {
+  const handleClawHitBall = useCallback((hitY?: number) => {
     if (grabTimeoutRef.current) {
       clearTimeout(grabTimeoutRef.current);
       grabTimeoutRef.current = null;
     }
 
     setClawState((prev) => {
-      if (!prev.isLowering) return prev;
+      const lockY = hitY !== undefined ? hitY : prev.y;
       return {
         ...prev,
+        y: lockY,
+        targetY: lockY,
         isLowering: false,
         isOpen: false
       };
@@ -163,6 +165,7 @@ export function App() {
       setClawState((prev) => ({
         ...prev,
         y: 0.15,
+        targetY: 0.15,
         isRaising: true
       }));
 
@@ -170,6 +173,7 @@ export function App() {
         setClawState((prev) => ({
           ...prev,
           x: 0.15,
+          targetX: 0.15,
           isRaising: false,
           isGrabbing: false,
           isOpen: true,

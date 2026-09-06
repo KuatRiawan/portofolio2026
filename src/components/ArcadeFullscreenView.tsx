@@ -135,7 +135,7 @@ export const ArcadeFullscreenView: React.FC<ArcadeFullscreenViewProps> = ({
           />
 
           {/* Chamber & Pedestal */}
-          <div className="p-3 sm:p-5 space-y-4 bg-[#e2e8f0]/40 flex-1">
+          <div className="p-2.5 sm:p-5 space-y-2.5 sm:space-y-4 bg-[#e2e8f0]/40 flex-1">
             
             {/* Glass Chamber Canvas */}
             <MesinChamberCanvas

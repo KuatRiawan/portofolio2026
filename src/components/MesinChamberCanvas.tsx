@@ -17,7 +17,7 @@ interface MesinChamberCanvasProps {
   projects: ProjectCapsule[];
   clawState: ClawState;
   onClawMove: (x: number, y: number) => void;
-  onClawHitBall?: () => void;
+  onClawHitBall?: (hitY?: number) => void;
   onCapsuleCaught: (project: ProjectCapsule) => void;
   caughtProjectIds: string[];
   shakeCount?: number;
@@ -458,13 +458,20 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
 
           // Check claw grab suction - Stop lowering immediately on ball contact!
           const distToClaw = Math.hypot(ix - clawPixelX, iy - (clawPixelY + 30));
-          if (currentClawState.isGrabbing && !currentClawState.hasCapsule && distToClaw < 55) {
+          if (currentClawState.isGrabbing && currentClawState.isLowering && !currentClawState.hasCapsule && distToClaw < 55) {
             currentClawState.hasCapsule = true;
             currentClawState.grabbedCapsuleId = item.id;
             grabbedProjectRef.current = item.project;
+            
+            // LOCK Y IMMEDIATELY to current smooth claw Y so it CANNOT continue moving down!
+            currentClawState.y = smoothClawRef.current.y;
+            currentClawState.targetY = smoothClawRef.current.y;
+            currentClawState.isLowering = false;
+            currentClawState.isOpen = false;
+
             soundFx.playVictoryFanfare();
             if (onClawHitBall) {
-              onClawHitBall();
+              onClawHitBall(smoothClawRef.current.y);
             }
           }
         });
@@ -603,7 +610,7 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
   }, []);
 
   return (
-    <div className="relative w-full h-[360px] xs:h-[400px] sm:h-[440px] md:h-[480px] lg:h-[520px] rounded-2xl sm:rounded-3xl overflow-hidden border-2 sm:border-4 border-slate-300 bg-sky-200 shadow-xl group">
+    <div className="relative w-full h-[420px] xs:h-[460px] sm:h-[480px] md:h-[520px] lg:h-[560px] rounded-2xl sm:rounded-3xl overflow-hidden border-2 sm:border-4 border-slate-300 bg-sky-200 shadow-xl group">
       {/* Mobile Motion & Tilt Sensor Notification Hint Banner */}
       {showTiltHint && (
         <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 w-[92%] max-w-xs bg-slate-900/95 text-white border-2 border-amber-400 p-2.5 rounded-2xl shadow-2xl backdrop-blur-md flex items-center justify-between gap-2 animate-bounce">
