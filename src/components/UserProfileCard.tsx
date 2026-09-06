@@ -39,7 +39,7 @@ export const UserProfileCard: React.FC = () => {
 
         {/* Short Bio Summary */}
         <div className="bg-amber-50/80 p-3 rounded-2xl border border-amber-200 text-xs text-amber-900 leading-relaxed font-sans shadow-2xs">
-          <span className="font-bold font-fredoka text-amber-950">Mahasiswa Sistem Informasi (IPK 3.50)</span> dengan 6 tahun rekam jejak manajemen operasional K3. Pengembang platform <strong className="text-orange-700">NURAGA - Integrated Safety Intelligence</strong> (K3 AI & WhatsApp Gateway).
+          <span className="font-bold font-fredoka text-amber-950">Mahasiswa Sistem Informasi</span> dengan 6 tahun rekam jejak manajemen operasional K3. Pengembang platform <strong className="text-orange-700">NURAGA - Integrated Safety Intelligence</strong> (K3 AI & WhatsApp Gateway).
         </div>
 
         {/* Contact Links */}
@@ -76,11 +76,11 @@ export const UserProfileCard: React.FC = () => {
               <GraduationCap className="w-4 h-4 text-blue-600" />
               <span>Universitas Terbuka</span>
             </div>
-            <span className="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full border border-emerald-300">
-              IPK 3.50 / 4.00
+            <span className="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded-full border border-blue-300">
+              S1 Sistem Informasi
             </span>
           </div>
-          <p className="text-[11px] text-slate-500">S1 Sistem Informasi (Maret 2024 - Sekarang)</p>
+          <p className="text-[11px] text-slate-500">Maret 2024 - Sekarang</p>
         </div>
 
         {/* Work Experience */}

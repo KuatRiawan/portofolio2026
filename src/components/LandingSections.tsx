@@ -87,12 +87,12 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onScrollToArca
                 <span>{t.heroTag}</span>
               </div>
 
-              <h1 className={`text-4xl sm:text-5xl lg:text-6xl font-black font-fredoka leading-tight tracking-tight min-h-[1.2em] ${
+              <h1 className={`text-4xl sm:text-5xl lg:text-6xl font-black font-fredoka leading-tight tracking-tight ${
                 isLight ? 'text-slate-900' : 'text-white'
               }`}>
                 {t.greetingPrefix}{' '}
-                <span className="gradient-text-orange border-r-4 border-orange-500 pr-1">
-                  {displayText}
+                <span className="gradient-text-orange">
+                  Kuat Riawan
                 </span>
               </h1>
 
@@ -200,12 +200,6 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onScrollToArca
                       <MapPin className="w-3.5 h-3.5 text-slate-400" />
                       <span>{t.location}</span>
                     </p>
-
-                    <div className="pt-1">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-600 border border-emerald-500/40">
-                        IPK 3.50 / 4.00
-                      </span>
-                    </div>
                   </div>
                 </div>
 
