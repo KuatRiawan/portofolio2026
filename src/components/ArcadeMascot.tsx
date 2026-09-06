@@ -23,7 +23,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
   const [mood, setMood] = useState<MascotMood>('happy');
   const [clickCount, setClickCount] = useState<number>(0);
   
-  const [speechBubble, setSpeechBubble] = useState<string>('Halo! Aku ClawBot, tarik atau geser aku atau klik aku!');
+  const [speechBubble, setSpeechBubble] = useState<string>('Halo! Aku Awans, tarik atau geser aku atau klik aku!');
   const [showSpeech, setShowSpeech] = useState<boolean>(true);
 
   const dragRef = useRef<{ startX: number; startY: number; initialPosX: number; initialPosY: number }>({
@@ -114,7 +114,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
     const idleTimer = setTimeout(() => {
       if (!isDragging && !isPaused && mood === 'happy') {
         setMood('sleepy');
-        setSpeechBubble('Zzz... ClawBot lagi istirahat sejenak...');
+        setSpeechBubble('Zzz... Awans lagi istirahat sejenak...');
         setShowSpeech(true);
       }
     }, 18000);
@@ -241,7 +241,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
     if (nextCount >= 3) {
       // ANGRY MOOD!
       setMood('angry');
-      setSpeechBubble('Aduh! Jangan diganggu atau dicliki terus dong! ClawBot kesel nih!');
+      setSpeechBubble('Aduh! Jangan diganggu atau dicliki terus dong! Awans kesel nih!');
       setShowSpeech(true);
 
       moodResetTimerRef.current = setTimeout(() => {
@@ -302,7 +302,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
                   <Sparkles className="w-3 h-3 text-amber-400" />
                 )}
                 <span className={mood === 'angry' ? 'text-rose-400' : mood === 'love' ? 'text-pink-300' : 'text-amber-400'}>
-                  ClawBot {mood === 'angry' ? '(Marah!)' : mood === 'love' ? '(Sayang)' : mood === 'surprised' ? '(Kaget!)' : ''}
+                  Awans {mood === 'angry' ? '(Marah!)' : mood === 'love' ? '(Sayang)' : mood === 'surprised' ? '(Kaget!)' : ''}
                 </span>
               </div>
               <button
@@ -357,7 +357,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
               ? '-translate-y-6 rotate-12 scale-110'
               : 'hover:scale-105 active:scale-95'
           } ${direction === 'left' ? '-scale-x-100' : 'scale-x-100'}`}
-          title="Klik atau geser ClawBot!"
+          title="Klik atau geser Awans!"
         >
           <svg width="85" height="95" viewBox="0 0 85 95" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-2xl">
             {/* Antenna Pole & Glowing Pulsing Bulb */}
