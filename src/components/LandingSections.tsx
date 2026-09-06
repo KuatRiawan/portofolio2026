@@ -7,6 +7,7 @@ import {
 import { PROJECTS_DATA } from '../data/projectsData';
 import type { ProjectCapsule } from '../types/portfolio';
 import { TechLogo } from './TechLogos';
+import { ArcadeMascot } from './ArcadeMascot';
 import { useApp } from '../context/AppContext';
 
 interface LandingSectionsProps {
@@ -241,6 +242,9 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onScrollToArca
 
           </div>
         </div>
+
+        {/* Interactive Animated Arcade Robot Mascot (ClawBot) Walking in Hero Highlight Area (Behind Cards - z-10) */}
+        <ArcadeMascot onScrollToArcade={onScrollToArcade} isAbsolute={true} />
       </section>
 
       {/* SECTION 2: STATS COUNTER BANNER */}
