@@ -361,15 +361,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
                   mood === 'sleepy' ? 'text-indigo-300' :
                   'text-amber-400'
                 }>
-                  Awans {
-                    mood === 'angry' ? '(Marah!)' :
-                    mood === 'dizzy' ? '(Pusing!)' :
-                    mood === 'sad' ? '(Sedih...)' :
-                    mood === 'love' ? '(Sayang)' :
-                    mood === 'surprised' ? '(Kaget!)' :
-                    mood === 'sleepy' ? '(Tidur)' :
-                    '(Senang)'
-                  }
+                  Awans
                 </span>
               </div>
               <button
@@ -379,58 +371,11 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
                 }}
                 className="text-slate-400 hover:text-white p-0.5"
               >
-                <X className="w-3 h-3" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
             
-            <p className="leading-snug text-[11px] mb-1.5">{speechBubble}</p>
-
-            {/* Quick Expression Tester Bar */}
-            <div className="pt-1.5 border-t border-slate-700/60 flex items-center gap-1 overflow-x-auto text-[9px] no-scrollbar">
-              <span className="text-slate-400 font-bold shrink-0">Tes:</span>
-              <button
-                onClick={(e) => { e.stopPropagation(); setMood('happy'); setSpeechBubble(moodQuotes.happy); triggerPause(); }}
-                className={`px-1.5 py-0.5 rounded font-bold transition-all shrink-0 ${mood === 'happy' ? 'bg-cyan-500 text-slate-950 scale-105' : 'bg-slate-800 text-cyan-300 hover:bg-slate-700'}`}
-              >
-                Senang
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); setMood('dizzy'); setSpeechBubble(moodQuotes.dizzy); triggerPause(); }}
-                className={`px-1.5 py-0.5 rounded font-bold transition-all shrink-0 ${mood === 'dizzy' ? 'bg-amber-500 text-slate-950 scale-105' : 'bg-slate-800 text-amber-300 hover:bg-slate-700'}`}
-              >
-                Pusing
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); setMood('sad'); setSpeechBubble(moodQuotes.sad); triggerPause(); }}
-                className={`px-1.5 py-0.5 rounded font-bold transition-all shrink-0 ${mood === 'sad' ? 'bg-blue-500 text-white scale-105' : 'bg-slate-800 text-blue-300 hover:bg-slate-700'}`}
-              >
-                Sedih
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); setMood('angry'); setSpeechBubble(moodQuotes.angry); triggerPause(); }}
-                className={`px-1.5 py-0.5 rounded font-bold transition-all shrink-0 ${mood === 'angry' ? 'bg-rose-500 text-white scale-105' : 'bg-slate-800 text-rose-300 hover:bg-slate-700'}`}
-              >
-                Marah
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); setMood('surprised'); setSpeechBubble(moodQuotes.surprised); triggerPause(); }}
-                className={`px-1.5 py-0.5 rounded font-bold transition-all shrink-0 ${mood === 'surprised' ? 'bg-yellow-500 text-slate-950 scale-105' : 'bg-slate-800 text-yellow-300 hover:bg-slate-700'}`}
-              >
-                Kaget
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); setMood('love'); setSpeechBubble(moodQuotes.love); triggerPause(); }}
-                className={`px-1.5 py-0.5 rounded font-bold transition-all shrink-0 ${mood === 'love' ? 'bg-pink-500 text-white scale-105' : 'bg-slate-800 text-pink-300 hover:bg-slate-700'}`}
-              >
-                Sayang
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); setMood('sleepy'); setSpeechBubble(moodQuotes.sleepy); triggerPause(); }}
-                className={`px-1.5 py-0.5 rounded font-bold transition-all shrink-0 ${mood === 'sleepy' ? 'bg-indigo-500 text-white scale-105' : 'bg-slate-800 text-indigo-300 hover:bg-slate-700'}`}
-              >
-                Tidur
-              </button>
-            </div>
+            <p className="leading-snug text-[11px]">{speechBubble}</p>
 
             {onScrollToArcade && (
               <button
@@ -463,12 +408,6 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
             }`} />
           </div>
         )}
-
-        {/* Drag Hint Indicator on Hover */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-7 px-2 py-0.5 bg-slate-900/90 text-amber-400 border border-slate-700 rounded-full text-[9px] font-fredoka flex items-center space-x-1 whitespace-nowrap shadow-md">
-          <Move className="w-3 h-3" />
-          <span>Angkat & Geser Aku!</span>
-        </div>
 
         {/* 2D Interactive Robot Pet SVG Character with Dynamic Expressions */}
         <div
