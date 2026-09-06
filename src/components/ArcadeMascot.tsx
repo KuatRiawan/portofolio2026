@@ -320,7 +320,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
         
         {/* Speech Bubble Above Pet Mascot */}
         {showSpeech && (
-          <div className={`absolute -top-24 -left-14 w-56 p-2.5 rounded-2xl shadow-2xl backdrop-blur-md animate-fade-in text-xs font-fredoka z-50 pointer-events-auto border-2 ${
+          <div className={`absolute -top-36 -left-14 w-56 p-2.5 rounded-2xl shadow-2xl backdrop-blur-md animate-fade-in text-xs font-fredoka z-50 pointer-events-auto border-2 ${
             mood === 'angry'
               ? 'bg-rose-950/95 text-rose-100 border-rose-500'
               : mood === 'dizzy'
