@@ -195,7 +195,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
       setSpeechBubble('Awans lagi liat Kartu Profil Kuat Riawan! Full-Stack Web Dev!');
     } else if (section === 'experience') {
       setMood('happy');
-      setSpeechBubble('Di PT Pandu Hydro Tugas, Kuat bikin WA Gateway K3 3.000+ peserta!');
+      setSpeechBubble('Di PT Upaya Riksa Patra, Kuat bikin WA Gateway K3 3.000+ peserta!');
     } else if (section === 'education') {
       setMood('sleepy');
       setSpeechBubble('Lagi liat pendidikan Kuat: S1 Sistem Informasi & Beasiswa Dicoding 2026!');
