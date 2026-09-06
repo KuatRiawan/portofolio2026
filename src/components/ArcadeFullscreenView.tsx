@@ -129,7 +129,10 @@ export const ArcadeFullscreenView: React.FC<ArcadeFullscreenViewProps> = ({
         }`}>
           
           {/* Header */}
-          <MesinHeader />
+          <MesinHeader
+            onOpenDeskripsiKarya={onOpenDeskripsiKarya}
+            onResetMachine={onResetMachine}
+          />
 
           {/* Chamber & Pedestal */}
           <div className="p-3 sm:p-5 space-y-4 bg-[#e2e8f0]/40 flex-1">
@@ -158,7 +161,7 @@ export const ArcadeFullscreenView: React.FC<ArcadeFullscreenViewProps> = ({
           </div>
 
           {/* Cabinet Footer */}
-          <footer className="bg-slate-100 p-2 text-center text-[10px] sm:text-xs font-fredoka text-slate-500 border-t border-slate-200">
+          <footer className="bg-slate-100 p-2 text-center text-[10px] sm:text-xs font-fredoka font-bold text-slate-500 border-t border-slate-200 uppercase tracking-wider">
             {t.cabinetFooter}
           </footer>
 
@@ -166,11 +169,12 @@ export const ArcadeFullscreenView: React.FC<ArcadeFullscreenViewProps> = ({
 
       </main>
 
-      {/* Bottom Footer Note */}
-      <footer className={`w-full max-w-4xl mx-auto text-center text-[11px] font-mono py-2 ${
+      {/* Bottom Footer Note - Responsive instructions */}
+      <footer className={`w-full max-w-4xl mx-auto text-center text-[10px] sm:text-xs font-mono py-2 px-3 ${
         isLight ? 'text-slate-600' : 'text-slate-400'
       }`}>
-        {t.cabinetInstruction}
+        <span className="sm:hidden">Gunakan Joystick untuk mengarahkan Capit. Tekan CAPIT untuk menangkap bola!</span>
+        <span className="hidden sm:inline">{t.cabinetInstruction}</span>
       </footer>
 
     </div>
