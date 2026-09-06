@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, X, Heart, RotateCw, CloudRain, AlertCircle, Moon, Flame, Send } from 'lucide-react';
+import { Sparkles, X, Heart, RotateCw, CloudRain, AlertCircle, Moon, Flame, Send, MessageSquare } from 'lucide-react';
 import { soundFx } from '../services/soundEffects';
 
 interface ArcadeMascotProps {
@@ -22,9 +22,10 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
   // Emotional Mood Engine (happy, angry, dizzy, sad, surprised, love, sleepy)
   const [mood, setMood] = useState<MascotMood>('happy');
   
-  const [speechBubble, setSpeechBubble] = useState<string>('Halo! Aku Awans, ketik pesan atau tanya apa saja di sini!');
+  const [speechBubble, setSpeechBubble] = useState<string>('Halo! Aku Awans, maskot Kuat Riawan!');
   const [showSpeech, setShowSpeech] = useState<boolean>(true);
   const [chatInput, setChatInput] = useState<string>('');
+  const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
 
   const dragRef = useRef<{ startX: number; startY: number; initialPosX: number; initialPosY: number }>({
     startX: 0,
@@ -80,6 +81,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
 
     const msg = chatInput.toLowerCase().trim();
     setChatInput('');
+    setIsChatOpen(false);
 
     let reply = '';
     if (msg.includes('proyek') || msg.includes('project') || msg.includes('karya') || msg.includes('nuraga')) {
@@ -105,7 +107,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
       reply = 'Makasih banyak ya! Awans makin sayang sama kamu!';
     } else {
       setMood('happy');
-      reply = `Awans paham! "${chatInput}" -> Kuat Riawan siap diajak berkembang & kerja sebagai Web Dev!`;
+      reply = `Awans paham! "${msg}" -> Kuat Riawan siap diajak berkembang & kerja sebagai Web Dev!`;
     }
 
     setSpeechBubble(reply);
@@ -429,30 +431,60 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
             
             <p className="leading-snug text-[11px] mb-2">{speechBubble}</p>
 
-            {/* Interactive AI Chat Input Column */}
-            <form onSubmit={handleChatSubmit} className="flex items-center gap-1">
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onClick={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-                placeholder="Tanya Awans..."
-                className="w-full px-2.5 py-1 bg-slate-950/80 border border-slate-700 focus:border-amber-400 text-slate-100 placeholder-slate-400 text-[10px] rounded-lg outline-none font-sans"
-              />
+            {/* Interactive AI Chat Trigger or Input Column */}
+            {!isChatOpen ? (
               <button
-                type="submit"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsChatOpen(true);
+                  triggerPause();
+                }}
                 onMouseDown={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
-                className="p-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:brightness-110 text-white rounded-lg transition-all font-bold flex items-center justify-center shrink-0 active:scale-95 border border-orange-300 shadow-xs cursor-pointer"
-                title="Kirim pesan ke Awans"
+                className="w-full py-1.5 px-3 bg-amber-500/20 hover:bg-amber-500/35 border border-amber-400/50 hover:border-amber-400 text-amber-300 hover:text-amber-200 text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer shadow-xs"
               >
-                <Send className="w-3 h-3" />
+                <MessageSquare className="w-3.5 h-3.5 text-amber-400" />
+                <span>Tekan untuk mengobrol</span>
               </button>
-            </form>
+            ) : (
+              <form onSubmit={handleChatSubmit} className="flex items-center gap-1">
+                <input
+                  type="text"
+                  autoFocus
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                  placeholder="Tanya Awans..."
+                  className="w-full px-2.5 py-1 bg-slate-950/90 border border-amber-400/60 focus:border-amber-400 text-slate-100 placeholder-slate-400 text-[10px] rounded-lg outline-none font-sans"
+                />
+                <button
+                  type="submit"
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  className="p-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:brightness-110 text-white rounded-lg transition-all font-bold flex items-center justify-center shrink-0 active:scale-95 border border-orange-300 shadow-xs cursor-pointer"
+                  title="Kirim pesan ke Awans"
+                >
+                  <Send className="w-3 h-3" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsChatOpen(false);
+                  }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  className="p-1 text-slate-400 hover:text-white rounded-lg transition-all"
+                  title="Batal"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </form>
+            )}
 
             {/* Speech Pointer Arrow */}
             <div className={`absolute -bottom-2 left-20 w-3.5 h-3.5 border-b-2 border-r-2 rotate-45 ${
