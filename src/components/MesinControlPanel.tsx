@@ -136,8 +136,8 @@ export const MesinControlPanel: React.FC<MesinControlPanelProps> = ({
 
       </div>
 
-      {/* Bottom Bar: DESKRIPSI KARYA (Left), KOCOK MESIN & RESET (Right) */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+      {/* Bottom Bar: DESKRIPSI KARYA (Left), KOCOK MESIN & RESET (Right) - Hidden on Mobile (hidden sm:flex) to maximize claw chamber height */}
+      <div className="hidden sm:flex flex-wrap items-center justify-between gap-2 pt-1">
         
         {/* Bottom-Left DESKRIPSI KARYA Badge */}
         <div

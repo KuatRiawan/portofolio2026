@@ -342,12 +342,6 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
           const capRad = radius + 1;
           const themeColor = getVibrantColor(idx, item.project.color);
 
-          // Soft Shadow Under Ball on Floor
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-          ctx.beginPath();
-          ctx.ellipse(0, capRad + 3, capRad * 0.85, 5, 0, 0, Math.PI * 2);
-          ctx.fill();
-
           // 1. TOP HALF DOME - High-Gloss Vibrant Color Plastic
           ctx.fillStyle = themeColor;
           ctx.beginPath();
@@ -546,8 +540,36 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
     }
   };
 
+  const [showTiltHint, setShowTiltHint] = useState<boolean>(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTiltHint(false);
+    }, 7000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <div className="relative w-full h-[300px] xs:h-[340px] sm:h-[400px] md:h-[460px] lg:h-[520px] rounded-2xl sm:rounded-3xl overflow-hidden border-2 sm:border-4 border-slate-300 bg-sky-200 shadow-xl group">
+    <div className="relative w-full h-[360px] xs:h-[400px] sm:h-[440px] md:h-[480px] lg:h-[520px] rounded-2xl sm:rounded-3xl overflow-hidden border-2 sm:border-4 border-slate-300 bg-sky-200 shadow-xl group">
+      {/* Mobile Tilt / Shake Sensor Notification Hint Banner */}
+      {showTiltHint && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 w-[92%] max-w-xs bg-slate-900/95 text-white border-2 border-amber-400 p-2.5 rounded-2xl shadow-2xl backdrop-blur-md flex items-center justify-between gap-2 animate-bounce">
+          <div className="flex items-center space-x-2 text-xs font-fredoka font-bold">
+            <span className="text-xl">📱</span>
+            <div>
+              <span className="text-amber-400 block text-[11px] font-black uppercase tracking-wider">SENSOR GERAK HP</span>
+              <span className="text-slate-200 text-[10px] leading-tight block">Miringkan / goyang HP kamu ke kanan-kiri untuk mengacak posisi bola! 🎯</span>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowTiltHint(false)}
+            className="text-slate-400 hover:text-white text-xs font-extrabold px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 shrink-0 active:scale-95"
+          >
+            OK
+          </button>
+        </div>
+      )}
+
       {/* Gyroscope Sensor Status Badge Indicator */}
       <div className="absolute top-2.5 right-2.5 z-10 px-2.5 py-1 rounded-full bg-slate-900/80 border border-slate-700 text-[10px] sm:text-xs font-mono font-bold text-slate-200 flex items-center gap-1.5 shadow-md pointer-events-none backdrop-blur-xs">
         <span className={`w-2 h-2 rounded-full ${isGyroActive ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
