@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+html {
+  scroll-behavior: smooth;
+}
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #0f172a;
+    color: #f8fafc;
+  }
+}
+
+.font-fredoka {
+  font-family: 'Fredoka', cursive, sans-serif;
+}
+
+.font-mono {
+  font-family: 'Fira Code', monospace;
+}
+
+/* Landing Page Gradient Text */
+.gradient-text-orange {
+  background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-blue {
+  background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Glassmorphism Card Styling */
+.glass-panel {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(249, 115, 22, 0.4);
+  box-shadow: 0 20px 40px -15px rgba(249, 115, 22, 0.15);
+}
+
+/* 3D Stroke & Shadow for Hero Title Text */
+.text-stroke-3d {
+  color: #fef08a; /* Warm Yellow */
+  text-shadow: 
+    3px 3px 0px #451a03,
+    -3px -3px 0px #451a03,
+    3px -3px 0px #451a03,
+    -3px 3px 0px #451a03,
+    0px 4px 0px #451a03,
+    0px 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Custom 3D Arcade Buttons */
+.btn-capit-3d {
+  background: linear-gradient(180deg, #ff7e5f 0%, #ff523b 100%);
+  box-shadow: 
+    0px 6px 0px #b91c1c,
+    0px 10px 20px rgba(239, 68, 68, 0.4);
+}
+
+.btn-capit-3d:active {
+  transform: translateY(4px);
+  box-shadow: 
+    0px 2px 0px #b91c1c,
+    0px 4px 10px rgba(239, 68, 68, 0.4);
+}
+
+@keyframes floatWobble {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(2deg); }
+}
+
+.animate-float-wobble {
+  animation: floatWobble 3.5s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 4s ease-in-out infinite;
+}
+
+/* Light Theme Overrides */
+html.light body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html.light nav {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light nav span.text-white {
+  color: #0f172a !important;
+}
+
+html.light nav button.text-slate-300 {
+  color: #475569 !important;
+}
+
+html.light nav button.text-slate-300:hover {
+  color: #0f172a !important;
+  background-color: #f1f5f9 !important;
+}
+
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.06);
+}
+
+html.light .glass-panel h1,
+html.light .glass-panel h2,
+html.light .glass-panel h3,
+html.light .glass-panel h4 {
+  color: #0f172a;
+}
+
+html.light h1.text-white,
+html.light h2.text-white,
+html.light h3.text-white,
+html.light h4.text-white {
+  color: #0f172a;
+}
+
+html.light p.text-slate-300,
+html.light p.text-slate-400 {
+  color: #475569;
+}
+
+html.light .bg-slate-800\/60,
+html.light .bg-slate-800\/80,
+html.light .bg-slate-800 {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+html.light .bg-slate-800\/50 {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #1e293b;
+}
+
+html.light .bg-slate-800\/50 .text-white,
+html.light .bg-slate-800\/60 .text-white,
+html.light .bg-slate-800\/80 .text-white {
+  color: #0f172a;
+}
+
+html.light .bg-slate-800\/80 span.text-slate-300,
+html.light .bg-slate-800\/60 p.text-slate-300 {
+  color: #334155;
+}
