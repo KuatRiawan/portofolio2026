@@ -175,10 +175,6 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onScrollToArca
 
             {/* Right Hero Glass Showcase Card (5 cols) */}
             <div className="lg:col-span-5 relative">
-              
-              {/* PET MASCOT: Attached to Profile Card, peeking out from top/behind card */}
-              <ArcadeMascot onScrollToArcade={onScrollToArcade} />
-
               <div className={`glass-panel p-6 rounded-3xl border shadow-2xl relative space-y-5 animate-float-wobble z-20 ${
                 isLight ? 'border-slate-300 bg-white/90' : 'border-slate-700 bg-slate-900/80'
               }`}>

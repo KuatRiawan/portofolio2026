@@ -5,6 +5,7 @@ import { LandingNavbar } from './components/LandingNavbar';
 import { LandingSections } from './components/LandingSections';
 import { ArcadeLoadingOverlay } from './components/ArcadeLoadingOverlay';
 import { ArcadeFullscreenView } from './components/ArcadeFullscreenView';
+import { ArcadeMascot } from './components/ArcadeMascot';
 import { ProjectModal } from './components/ProjectModal';
 import { RakCapitModal } from './components/RakCapitModal';
 import { soundFx } from './services/soundEffects';
@@ -336,6 +337,9 @@ export function App() {
         allProjects={projects}
         onSelectProject={(proj) => setSelectedProject(proj)}
       />
+
+      {/* Global Fixed Floating Pet Mascot Awans */}
+      <ArcadeMascot onScrollToArcade={handleOpenArcadeFullscreen} />
 
     </div>
   );

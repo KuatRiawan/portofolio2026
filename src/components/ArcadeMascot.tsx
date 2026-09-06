@@ -9,8 +9,11 @@ interface ArcadeMascotProps {
 type MascotMood = 'happy' | 'angry' | 'dizzy' | 'sad' | 'surprised' | 'love' | 'sleepy';
 
 export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
-  // Coordinates relative to profile card container
-  const [pos, setPos] = useState<{ x: number; y: number }>({ x: 220, y: -25 });
+  // Global viewport coordinates (Fixed position floating over all pages)
+  const [pos, setPos] = useState<{ x: number; y: number }>(() => ({
+    x: typeof window !== 'undefined' ? Math.max(20, window.innerWidth - 120) : 220,
+    y: typeof window !== 'undefined' ? Math.max(20, window.innerHeight - 150) : 400,
+  }));
   const [direction, setDirection] = useState<'right' | 'left'>('left');
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isJumping, setIsJumping] = useState<boolean>(false);
@@ -22,7 +25,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
   // Emotional Mood Engine (happy, angry, dizzy, sad, surprised, love, sleepy)
   const [mood, setMood] = useState<MascotMood>('happy');
   
-  const [speechBubble, setSpeechBubble] = useState<string>('Halo! Aku Awans, maskot Kuat Riawan!');
+  const [speechBubble, setSpeechBubble] = useState<string>('Halo! Aku Awans, siap mendampingi kamu di halaman mana saja!');
   const [showSpeech, setShowSpeech] = useState<boolean>(true);
   const [chatInput, setChatInput] = useState<string>('');
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
@@ -31,7 +34,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
     startX: 0,
     startY: 0,
     initialPosX: 220,
-    initialPosY: -25,
+    initialPosY: 400,
   });
 
   const isPointerDownRef = useRef<boolean>(false);
@@ -58,8 +61,8 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
   };
 
   const mascotQuotes = [
-    'Ssshh... Aku ngumpet di belakang kartu profil Kuat Riawan!',
-    'Kamu bisa angkat dan geser aku ke mana saja lho!',
+    'Aku selalu mendampingi kamu di semua bagian halaman ini!',
+    'Kamu bisa angkat dan geser aku ke bagian mana saja di layar!',
     'Proyek NURAGA AI K3 keren banget! Ada WA Gateway dan Analytics!',
     'Kuat Riawan lulus Beasiswa Dicoding 2026 Predikat Distinction!',
     'Miringkan atau kocok HP kamu di arena capit untuk mengacak posisi bola!',
@@ -133,17 +136,18 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
     const interval = setInterval(() => {
       setPos((prevPos) => {
         let newX = prevPos.x;
+        const maxWalkX = Math.max(50, (typeof window !== 'undefined' ? window.innerWidth : 400) - 100);
 
         if (direction === 'left') {
           newX -= walkSpeed * 3;
-          if (newX <= 10) {
-            newX = 10;
+          if (newX <= 15) {
+            newX = 15;
             setDirection('right');
           }
         } else {
           newX += walkSpeed * 3;
-          if (newX >= 320) {
-            newX = 320;
+          if (newX >= maxWalkX) {
+            newX = maxWalkX;
             setDirection('left');
           }
         }
@@ -354,8 +358,8 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
 
   return (
     <div
-      className={`absolute transition-all ${
-        isDragging ? 'duration-0 z-50 scale-110 cursor-grabbing' : 'duration-700 ease-in-out z-30 cursor-grab'
+      className={`fixed transition-all ${
+        isDragging ? 'duration-0 z-[9999] scale-110 cursor-grabbing' : 'duration-700 ease-in-out z-[9999] cursor-grab'
       } select-none pointer-events-auto`}
       style={{
         transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
@@ -367,14 +371,16 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
     >
       <div className="relative group flex flex-col items-center">
         
-        {/* Speech Bubble Above Pet Mascot */}
+        {/* Speech Bubble Above or Below Pet Mascot depending on viewport position */}
         {showSpeech && (
           <div
             onMouseDown={(e) => e.stopPropagation()}
             onTouchStart={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
-            className={`absolute -top-40 -left-14 w-60 p-2.5 rounded-2xl shadow-2xl backdrop-blur-md animate-fade-in text-xs font-fredoka z-50 pointer-events-auto border-2 ${
+            className={`absolute ${
+              pos.y < 170 ? 'top-24' : '-top-40'
+            } -left-14 w-60 p-2.5 rounded-2xl shadow-2xl backdrop-blur-md animate-fade-in text-xs font-fredoka z-[9999] pointer-events-auto border-2 ${
             mood === 'angry'
               ? 'bg-rose-950/95 text-rose-100 border-rose-500'
               : mood === 'dizzy'
@@ -487,7 +493,9 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
             )}
 
             {/* Speech Pointer Arrow */}
-            <div className={`absolute -bottom-2 left-20 w-3.5 h-3.5 border-b-2 border-r-2 rotate-45 ${
+            <div className={`absolute ${
+              pos.y < 170 ? '-top-2 left-20 border-t-2 border-l-2' : '-bottom-2 left-20 border-b-2 border-r-2'
+            } w-3.5 h-3.5 rotate-45 ${
               mood === 'angry'
                 ? 'bg-rose-950 border-rose-500'
                 : mood === 'dizzy'
