@@ -20,15 +20,15 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({
   const isLight = theme === 'light';
 
   return (
-    <nav className={`sticky top-0 z-50 w-full backdrop-blur-md border-b transition-colors duration-300 select-none ${
+    <nav className={`sticky top-0 z-50 w-full max-w-full overflow-x-hidden backdrop-blur-md border-b transition-colors duration-300 select-none ${
       isLight ? 'bg-white/90 border-slate-200 text-slate-900 shadow-sm' : 'bg-slate-900/80 border-slate-800/80 text-white'
     }`}>
-      <div className="w-full px-3 sm:px-8 lg:px-12 xl:px-16 h-16 flex items-center justify-between">
+      <div className="w-full max-w-full px-3 sm:px-8 lg:px-12 xl:px-16 h-16 flex items-center justify-between">
         
         {/* Brand Logo */}
         <div 
           onClick={() => onScrollToSection('hero')}
-          className="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer group shrink-0"
+          className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group shrink-0"
         >
           <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-slate-800 overflow-hidden shadow-lg border-2 border-orange-400 group-hover:scale-105 transition-transform shrink-0">
             <img src="/profile.jpg" alt="Kuat Riawan" className="w-full h-full object-cover" />
@@ -38,7 +38,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({
               <span className={`font-fredoka font-black text-sm sm:text-base tracking-wide ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 KUAT RIAWAN
               </span>
-              <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-emerald-500/20 text-emerald-500 border border-emerald-500/30">
+              <span className="hidden sm:inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-emerald-500/20 text-emerald-500 border border-emerald-500/30">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse" />
                 {t.availableForHire}
               </span>
