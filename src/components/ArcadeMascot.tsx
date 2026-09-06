@@ -15,11 +15,11 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isJumping, setIsJumping] = useState<boolean>(false);
   
-  // Emotional Mood Engine!
+  // Emotional Mood Engine
   const [mood, setMood] = useState<MascotMood>('happy');
   const [clickCount, setClickCount] = useState<number>(0);
   
-  const [speechBubble, setSpeechBubble] = useState<string>('Halo! Aku ClawBot 🤖 Tarik/geser aku atau klik aku!');
+  const [speechBubble, setSpeechBubble] = useState<string>('Halo! Aku ClawBot, tarik atau geser aku atau klik aku!');
   const [showSpeech, setShowSpeech] = useState<boolean>(true);
 
   const dragRef = useRef<{ startX: number; startY: number; initialPosX: number; initialPosY: number }>({
@@ -33,13 +33,13 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
   const moodResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const mascotQuotes = [
-    'Ssshh... Aku ngumpet di belakang kartu profil Kuat Riawan! 🤫🤖',
-    'Kamu bisa angkat & geser aku ke mana saja lho! ✋✨',
-    'Proyek NURAGA AI K3 keren banget! 🚀 WA Gateway & Analytics!',
-    'Kuat Riawan lulus Beasiswa Dicoding 2026 Predikat Distinction! 🏆',
-    'Miringkan / kocok HP kamu di arena capit untuk mengacak posisi bola! 📱',
-    'Database K3 3.000+ peserta sudah dikelola otomatis! ⚡',
-    'Kuat Riawan siap diajak berkembang & kerja sebagai Full-Stack Web Dev! 💼'
+    'Ssshh... Aku ngumpet di belakang kartu profil Kuat Riawan!',
+    'Kamu bisa angkat dan geser aku ke mana saja lho!',
+    'Proyek NURAGA AI K3 keren banget! Ada WA Gateway dan Analytics!',
+    'Kuat Riawan lulus Beasiswa Dicoding 2026 Predikat Distinction!',
+    'Miringkan atau kocok HP kamu di arena capit untuk mengacak posisi bola!',
+    'Database K3 3.000+ peserta sudah dikelola otomatis!',
+    'Kuat Riawan siap diajak berkembang dan kerja sebagai Full-Stack Web Dev!'
   ];
 
   // Active Walking & Wandering Movement Loop
@@ -98,7 +98,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
     const idleTimer = setTimeout(() => {
       if (!isDragging && mood === 'happy') {
         setMood('sleepy');
-        setSpeechBubble('Zzz... ClawBot lagi istirahat sejenak... 💤');
+        setSpeechBubble('Zzz... ClawBot lagi istirahat sejenak...');
         setShowSpeech(true);
       }
     }, 18000);
@@ -123,7 +123,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
     soundFx.playGrabPulse();
     setIsDragging(true);
     setMood('surprised'); // Kaget saat diangkat!
-    setSpeechBubble('Waaaa! Aku terbang diangkat! 🚀✨');
+    setSpeechBubble('Waaaa! Aku terbang diangkat!');
     setShowSpeech(true);
 
     dragRef.current = {
@@ -153,7 +153,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
         
         // After drop: Love mood!
         setMood('love');
-        setSpeechBubble('Hehe, makasih ya udah mindahin aku dengan lembut! ❤️✨');
+        setSpeechBubble('Hehe, terima kasih ya sudah memindahkan aku dengan lembut!');
         setShowSpeech(true);
 
         // Reset to happy after 3.5s
@@ -209,9 +209,9 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
 
     // React based on click count & current mood
     if (nextCount >= 3) {
-      // ANGRY MOOD! 😡
+      // ANGRY MOOD!
       setMood('angry');
-      setSpeechBubble('Aduh! Jangan diganggu/dicliki terus dong! ClawBot kesel nih! 😡🔥');
+      setSpeechBubble('Aduh! Jangan diganggu atau dicliki terus dong! ClawBot kesel nih!');
       setShowSpeech(true);
 
       moodResetTimerRef.current = setTimeout(() => {
@@ -219,16 +219,16 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
         setClickCount(0);
       }, 5000);
     } else if (mood === 'angry') {
-      // Petting while angry -> calms down into love 🥰
+      // Petting while angry -> calms down into love
       setMood('love');
-      setSpeechBubble('Ya udah deh, makasih udah usap aku! ❤️😊');
+      setSpeechBubble('Ya sudah deh, terima kasih sudah mengelus aku!');
       setShowSpeech(true);
 
       moodResetTimerRef.current = setTimeout(() => {
         setMood('happy');
       }, 3500);
     } else {
-      // Normal Happy / Love click 😃
+      // Normal Happy / Love click
       setMood('happy');
       const q = mascotQuotes[Math.floor(Math.random() * mascotQuotes.length)];
       setSpeechBubble(q);
@@ -272,7 +272,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
                   <Sparkles className="w-3 h-3 text-amber-400" />
                 )}
                 <span className={mood === 'angry' ? 'text-rose-400' : mood === 'love' ? 'text-pink-300' : 'text-amber-400'}>
-                  ClawBot {mood === 'angry' ? '(Marah! 😡)' : mood === 'love' ? '(Sayang ❤️)' : mood === 'surprised' ? '(Kaget! 😮)' : '🤖'}
+                  ClawBot {mood === 'angry' ? '(Marah!)' : mood === 'love' ? '(Sayang)' : mood === 'surprised' ? '(Kaget!)' : ''}
                 </span>
               </div>
               <button
@@ -328,7 +328,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
               ? '-translate-y-6 rotate-12 scale-110'
               : 'hover:scale-105 active:scale-95'
           } ${direction === 'left' ? '-scale-x-100' : 'scale-x-100'}`}
-          title="Klik atau geser ClawBot! 🤖"
+          title="Klik atau geser ClawBot!"
         >
           <svg width="85" height="95" viewBox="0 0 85 95" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-2xl">
             {/* Antenna Pole & Glowing Pulsing Bulb */}
@@ -359,7 +359,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
 
             {/* DYNAMIC FACIAL EXPRESSIONS */}
 
-            {/* 1. ANGRY FACE 😡 */}
+            {/* 1. ANGRY FACE */}
             {mood === 'angry' && (
               <g>
                 {/* Angry Eyebrows */}
@@ -375,7 +375,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
               </g>
             )}
 
-            {/* 2. SURPRISED FACE 😮 */}
+            {/* 2. SURPRISED FACE */}
             {mood === 'surprised' && (
               <g>
                 {/* Big Yellow Eyeballs */}
@@ -388,7 +388,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
               </g>
             )}
 
-            {/* 3. LOVE / HEART FACE 🥰 */}
+            {/* 3. LOVE / HEART FACE */}
             {mood === 'love' && (
               <g>
                 {/* Heart Eyes */}
@@ -398,11 +398,11 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
                 <circle cx="27" cy="35" r="3" fill="#f472b6" opacity="0.6" />
                 <circle cx="57" cy="35" r="3" fill="#f472b6" opacity="0.6" />
                 {/* Cute W Mouth */}
-                <path d="M36 37 Q 39 40 42 37 Q 45 40 48 37" stroke="#f472b6" strokeWidth="2" strokeLinecap="round" fill="none" />
+                <path d="M36 37 Q 39 40 42 37 Q 46 40 48 37" stroke="#f472b6" strokeWidth="2" strokeLinecap="round" fill="none" />
               </g>
             )}
 
-            {/* 4. SLEEPY FACE 😴 */}
+            {/* 4. SLEEPY FACE */}
             {mood === 'sleepy' && (
               <g>
                 {/* Closed Zzz Eyes */}
@@ -413,7 +413,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
               </g>
             )}
 
-            {/* 5. DEFAULT HAPPY FACE 😃 */}
+            {/* 5. DEFAULT HAPPY FACE */}
             {mood === 'happy' && (
               <g>
                 {/* Glowing Cyan Eyes */}
