@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, Gamepad2, X, Move, Frown, Heart } from 'lucide-react';
+import { Sparkles, Gamepad2, X, Move, Frown, Heart, RotateCw, CloudRain, AlertCircle, Moon, Flame } from 'lucide-react';
 import { soundFx } from '../services/soundEffects';
 
 interface ArcadeMascotProps {
   onScrollToArcade?: () => void;
 }
 
-type MascotMood = 'happy' | 'angry' | 'surprised' | 'love' | 'sleepy';
+type MascotMood = 'happy' | 'angry' | 'dizzy' | 'sad' | 'surprised' | 'love' | 'sleepy';
 
 export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) => {
   // Coordinates relative to profile card container
@@ -19,7 +19,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Emotional Mood Engine
+  // Emotional Mood Engine (happy, angry, dizzy, sad, surprised, love, sleepy)
   const [mood, setMood] = useState<MascotMood>('happy');
   const [clickCount, setClickCount] = useState<number>(0);
   
@@ -62,8 +62,8 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
   useEffect(() => {
     if (isDragging || isPaused || mood === 'sleepy') return;
 
-    const walkSpeed = mood === 'angry' ? 1.2 : 0.45;
-    const intervalTime = mood === 'angry' ? 50 : 90;
+    const walkSpeed = mood === 'angry' ? 1.3 : mood === 'dizzy' ? 0.3 : 0.45;
+    const intervalTime = mood === 'angry' ? 45 : mood === 'dizzy' ? 120 : 90;
 
     const interval = setInterval(() => {
       setPos((prevPos) => {
@@ -92,7 +92,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
 
   // Periodic Random Speech Bubble
   useEffect(() => {
-    if (isDragging || isPaused || mood === 'angry') return;
+    if (isDragging || isPaused || mood === 'angry' || mood === 'dizzy' || mood === 'sad') return;
 
     const speechTimer = setInterval(() => {
       if (mood === 'happy') {
@@ -217,7 +217,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
     };
   }, [isDragging, pos]);
 
-  // Click & Emotional Reaction Logic!
+  // Click & Emotional Reaction Logic! (Ekspresi: Senang, Pusing, Sedih, Marah, Sayang, Kaget, Tidur)
   const triggerMascotClick = () => {
     soundFx.playGrabPulse();
 
@@ -233,36 +233,45 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
     if (clickResetTimerRef.current) clearTimeout(clickResetTimerRef.current);
     clickResetTimerRef.current = setTimeout(() => {
       setClickCount(0);
-    }, 2500);
+    }, 4000);
 
     if (moodResetTimerRef.current) clearTimeout(moodResetTimerRef.current);
 
-    // React based on click count & current mood
-    if (nextCount >= 3) {
-      // ANGRY MOOD!
+    // Cycle through rich emotional reactions based on click count & mood:
+    if (mood === 'angry') {
+      // Petting while angry -> calms down into love
+      setMood('love');
+      setSpeechBubble('Makasih ya sudah mengelus Awans, Awans gak marah lagi deh!');
+      setShowSpeech(true);
+      moodResetTimerRef.current = setTimeout(() => setMood('happy'), 4000);
+    } else if (nextCount === 1) {
+      // 1st click: Happy / Senang
+      setMood('happy');
+      const q = mascotQuotes[Math.floor(Math.random() * mascotQuotes.length)];
+      setSpeechBubble(q);
+      setShowSpeech(true);
+    } else if (nextCount === 2) {
+      // 2nd click: Dizzy / Pusing!
+      setMood('dizzy');
+      setSpeechBubble('Waduh! Awans pusing banget diklik terus-terusan nih!');
+      setShowSpeech(true);
+      moodResetTimerRef.current = setTimeout(() => setMood('happy'), 4000);
+    } else if (nextCount === 3) {
+      // 3rd click: Sad / Sedih...
+      setMood('sad');
+      setSpeechBubble('Huuu... Awans sedih, jangan dijailin terus dong...');
+      setShowSpeech(true);
+      moodResetTimerRef.current = setTimeout(() => setMood('happy'), 4500);
+    } else if (nextCount >= 4) {
+      // 4th+ click: Angry / Marah!
       setMood('angry');
-      setSpeechBubble('Aduh! Jangan diganggu atau dicliki terus dong! Awans kesel nih!');
+      setSpeechBubble('Aduh! Awans MARAH NIH! Jangan diganggu terus dong!');
       setShowSpeech(true);
 
       moodResetTimerRef.current = setTimeout(() => {
         setMood('happy');
         setClickCount(0);
       }, 5000);
-    } else if (mood === 'angry') {
-      // Petting while angry -> calms down into love
-      setMood('love');
-      setSpeechBubble('Ya sudah deh, terima kasih sudah mengelus aku!');
-      setShowSpeech(true);
-
-      moodResetTimerRef.current = setTimeout(() => {
-        setMood('happy');
-      }, 3500);
-    } else {
-      // Normal Happy / Love click
-      setMood('happy');
-      const q = mascotQuotes[Math.floor(Math.random() * mascotQuotes.length)];
-      setSpeechBubble(q);
-      setShowSpeech(true);
     }
   };
 
@@ -286,23 +295,53 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
           <div className={`absolute -top-24 -left-14 w-56 p-2.5 rounded-2xl shadow-2xl backdrop-blur-md animate-fade-in text-xs font-fredoka z-50 pointer-events-auto border-2 ${
             mood === 'angry'
               ? 'bg-rose-950/95 text-rose-100 border-rose-500'
+              : mood === 'dizzy'
+              ? 'bg-amber-950/95 text-amber-100 border-amber-500'
+              : mood === 'sad'
+              ? 'bg-blue-950/95 text-blue-100 border-blue-400'
               : mood === 'love'
               ? 'bg-pink-950/95 text-pink-100 border-pink-400'
               : mood === 'surprised'
-              ? 'bg-amber-950/95 text-amber-100 border-amber-400'
+              ? 'bg-yellow-950/95 text-yellow-100 border-yellow-400'
+              : mood === 'sleepy'
+              ? 'bg-indigo-950/95 text-indigo-100 border-indigo-400'
               : 'bg-slate-900/95 text-slate-100 border-amber-400'
           }`}>
             <div className="flex items-center justify-between gap-1 mb-1">
               <div className="flex items-center space-x-1 text-[10px] font-bold uppercase tracking-wider">
                 {mood === 'angry' ? (
-                  <Frown className="w-3 h-3 text-rose-400" />
+                  <Flame className="w-3 h-3 text-rose-400" />
+                ) : mood === 'dizzy' ? (
+                  <RotateCw className="w-3 h-3 text-amber-400 animate-spin" />
+                ) : mood === 'sad' ? (
+                  <CloudRain className="w-3 h-3 text-blue-400" />
                 ) : mood === 'love' ? (
                   <Heart className="w-3 h-3 text-pink-400 fill-pink-400" />
+                ) : mood === 'surprised' ? (
+                  <AlertCircle className="w-3 h-3 text-yellow-400" />
+                ) : mood === 'sleepy' ? (
+                  <Moon className="w-3 h-3 text-indigo-400" />
                 ) : (
                   <Sparkles className="w-3 h-3 text-amber-400" />
                 )}
-                <span className={mood === 'angry' ? 'text-rose-400' : mood === 'love' ? 'text-pink-300' : 'text-amber-400'}>
-                  Awans {mood === 'angry' ? '(Marah!)' : mood === 'love' ? '(Sayang)' : mood === 'surprised' ? '(Kaget!)' : ''}
+                <span className={
+                  mood === 'angry' ? 'text-rose-400' :
+                  mood === 'dizzy' ? 'text-amber-300' :
+                  mood === 'sad' ? 'text-blue-300' :
+                  mood === 'love' ? 'text-pink-300' :
+                  mood === 'surprised' ? 'text-yellow-300' :
+                  mood === 'sleepy' ? 'text-indigo-300' :
+                  'text-amber-400'
+                }>
+                  Awans {
+                    mood === 'angry' ? '(Marah!)' :
+                    mood === 'dizzy' ? '(Pusing!)' :
+                    mood === 'sad' ? '(Sedih...)' :
+                    mood === 'love' ? '(Sayang)' :
+                    mood === 'surprised' ? '(Kaget!)' :
+                    mood === 'sleepy' ? '(Tidur)' :
+                    '(Senang)'
+                  }
                 </span>
               </div>
               <button
@@ -335,8 +374,16 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
             <div className={`absolute -bottom-2 left-20 w-3.5 h-3.5 border-b-2 border-r-2 rotate-45 ${
               mood === 'angry'
                 ? 'bg-rose-950 border-rose-500'
+                : mood === 'dizzy'
+                ? 'bg-amber-950 border-amber-500'
+                : mood === 'sad'
+                ? 'bg-blue-950 border-blue-400'
                 : mood === 'love'
                 ? 'bg-pink-950 border-pink-400'
+                : mood === 'surprised'
+                ? 'bg-yellow-950 border-yellow-400'
+                : mood === 'sleepy'
+                ? 'bg-indigo-950 border-indigo-400'
                 : 'bg-slate-900 border-amber-400'
             }`} />
           </div>
@@ -366,8 +413,8 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
               cx="42.5"
               cy="5"
               r="5"
-              fill={mood === 'angry' ? '#ef4444' : mood === 'love' ? '#ec4899' : '#f59e0b'}
-              className={mood === 'angry' ? 'animate-ping' : 'animate-pulse'}
+              fill={mood === 'angry' ? '#ef4444' : mood === 'love' ? '#ec4899' : mood === 'dizzy' ? '#f59e0b' : mood === 'sad' ? '#3b82f6' : '#f59e0b'}
+              className={mood === 'angry' ? 'animate-ping' : mood === 'dizzy' ? 'animate-spin' : 'animate-pulse'}
             />
             <circle cx="42.5" cy="5" r="2.5" fill="#fef08a" />
 
@@ -378,71 +425,124 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
               width="49"
               height="32"
               rx="14"
-              fill={mood === 'angry' ? '#450a0a' : '#334155'}
-              stroke={mood === 'angry' ? '#ef4444' : '#0f172a'}
+              fill={mood === 'angry' ? '#450a0a' : mood === 'sad' ? '#1e3a8a' : mood === 'dizzy' ? '#451a03' : '#334155'}
+              stroke={mood === 'angry' ? '#ef4444' : mood === 'sad' ? '#3b82f6' : mood === 'dizzy' ? '#f59e0b' : '#0f172a'}
               strokeWidth="3"
             />
             
             {/* Visor Screen */}
             <rect x="23" y="21" width="39" height="22" rx="8" fill="#0f172a" />
 
-            {/* DYNAMIC FACIAL EXPRESSIONS */}
+            {/* DYNAMIC FACIAL EXPRESSIONS (7 Expressions: Marah, Pusing, Sedih, Kaget, Sayang, Tidur, Senang) */}
 
-            {/* 1. ANGRY FACE */}
+            {/* 1. ANGRY FACE (Marah) */}
             {mood === 'angry' && (
               <g>
+                {/* Anger Steam Cross Icon SVG above head */}
+                <g className="animate-bounce">
+                  <path d="M60 8 L68 8 M64 4 L64 12 M61 5 L67 11 M67 5 L61 11" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
+                </g>
                 {/* Angry Eyebrows */}
-                <line x1="27" y1="25" x2="37" y2="30" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
-                <line x1="57" y1="25" x2="47" y2="30" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
+                <line x1="26" y1="24" x2="38" y2="29" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
+                <line x1="58" y1="24" x2="46" y2="29" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
                 {/* Red Glowing Eyes */}
-                <circle cx="33" cy="32" r="3.5" fill="#ef4444" className="animate-ping" />
-                <circle cx="33" cy="32" r="3" fill="#ef4444" />
-                <circle cx="51" cy="32" r="3.5" fill="#ef4444" className="animate-ping" />
-                <circle cx="51" cy="32" r="3" fill="#ef4444" />
-                {/* Jagged Mouth */}
-                <path d="M33 39 L37 36 L41 39 L45 36 L49 39" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                <circle cx="33" cy="32" r="4" fill="#ef4444" className="animate-ping" />
+                <circle cx="33" cy="32" r="3.5" fill="#ef4444" />
+                <circle cx="51" cy="32" r="4" fill="#ef4444" className="animate-ping" />
+                <circle cx="51" cy="32" r="3.5" fill="#ef4444" />
+                {/* Sharp Pupils */}
+                <line x1="33" y1="29" x2="33" y2="35" stroke="#ffffff" strokeWidth="1.5" />
+                <line x1="51" y1="29" x2="51" y2="35" stroke="#ffffff" strokeWidth="1.5" />
+                {/* Jagged Teeth Mouth */}
+                <path d="M31 39 L35 36 L39 39 L43 36 L47 39 L51 36" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" fill="none" />
               </g>
             )}
 
-            {/* 2. SURPRISED FACE */}
+            {/* 2. DIZZY FACE (Pusing) */}
+            {mood === 'dizzy' && (
+              <g>
+                {/* Orbiting Stars above antenna */}
+                <g className="animate-spin" style={{ transformOrigin: '42.5px 5px', animationDuration: '2s' }}>
+                  <polygon points="42.5,0 44,3 47,3.5 44.5,5.5 45,8.5 42.5,7 40,8.5 40.5,5.5 38,3.5 41,3" fill="#f59e0b" />
+                  <polygon points="26,5 27,7 29,7 27.5,8 28,10 26,9 24,10 24.5,8 23,7 25,7" fill="#fde047" />
+                  <polygon points="59,5 60,7 62,7 60.5,8 61,10 59,9 57,10 57.5,8 56,7 58,7" fill="#fde047" />
+                </g>
+                {/* Spiral Eyes (@ @) */}
+                <path d="M30 32 A 3 3 0 1 1 34 34 A 1.5 1.5 0 1 1 32 32" stroke="#f59e0b" strokeWidth="2" fill="none" className="animate-spin" style={{ transformOrigin: '33px 32px' }} />
+                <path d="M48 32 A 3 3 0 1 1 52 34 A 1.5 1.5 0 1 1 50 32" stroke="#f59e0b" strokeWidth="2" fill="none" className="animate-spin" style={{ transformOrigin: '51px 32px' }} />
+                {/* Dizzy Wavy Mouth */}
+                <path d="M33 39 Q 37 36 41 39 Q 45 42 49 39" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+              </g>
+            )}
+
+            {/* 3. SAD FACE (Sedih) */}
+            {mood === 'sad' && (
+              <g>
+                {/* Drooping Sad Eyebrows */}
+                <line x1="27" y1="26" x2="37" y2="23" stroke="#60a5fa" strokeWidth="3" strokeLinecap="round" />
+                <line x1="57" y1="26" x2="47" y2="23" stroke="#60a5fa" strokeWidth="3" strokeLinecap="round" />
+                {/* Sad Blue Eyes */}
+                <circle cx="33" cy="32" r="4" fill="#3b82f6" />
+                <circle cx="51" cy="32" r="4" fill="#3b82f6" />
+                {/* Dropping Tear SVG */}
+                <path d="M28 35 C28 35 26 39 28 41 C30 43 32 41 32 39 C32 37 28 35 28 35 Z" fill="#60a5fa" className="animate-bounce" style={{ animationDuration: '1s' }} />
+                {/* Downward Sad Mouth Arc */}
+                <path d="M34 40 Q 42 35 50 40" stroke="#60a5fa" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+              </g>
+            )}
+
+            {/* 4. SURPRISED FACE (Kaget) */}
             {mood === 'surprised' && (
               <g>
+                {/* High raised eyebrows */}
+                <line x1="28" y1="23" x2="37" y2="23" stroke="#fde047" strokeWidth="2.5" strokeLinecap="round" />
+                <line x1="47" y1="23" x2="56" y2="23" stroke="#fde047" strokeWidth="2.5" strokeLinecap="round" />
                 {/* Big Yellow Eyeballs */}
                 <circle cx="33" cy="31" r="5.5" fill="#fde047" className="animate-ping" />
                 <circle cx="33" cy="31" r="4.5" fill="#fde047" />
                 <circle cx="51" cy="31" r="5.5" fill="#fde047" className="animate-ping" />
                 <circle cx="51" cy="31" r="4.5" fill="#fde047" />
+                {/* Black pupil centers */}
+                <circle cx="33" cy="31" r="2" fill="#0f172a" />
+                <circle cx="51" cy="31" r="2" fill="#0f172a" />
                 {/* Open O Mouth */}
-                <circle cx="42" cy="38" r="3.5" fill="none" stroke="#fde047" strokeWidth="2.5" />
+                <circle cx="42" cy="38" r="4" fill="#0f172a" stroke="#fde047" strokeWidth="2.5" />
+                {/* Sweat drop on side */}
+                <path d="M62 20 C62 20 59 24 61 26 C63 28 65 26 65 24 Z" fill="#38bdf8" />
               </g>
             )}
 
-            {/* 3. LOVE / HEART FACE */}
+            {/* 5. LOVE FACE (Sayang) */}
             {mood === 'love' && (
               <g>
                 {/* Heart Eyes */}
-                <path d="M30 30 C30 27 34 27 34 30 C34 27 38 27 38 30 C38 33 34 36 34 36 C34 36 30 33 30 30 Z" fill="#ec4899" />
-                <path d="M48 30 C48 27 52 27 52 30 C52 27 56 27 56 30 C56 33 52 36 52 36 C52 36 48 33 48 30 Z" fill="#ec4899" />
+                <path d="M29 30 C29 27 33 27 33 30 C33 27 37 27 37 30 C37 33 33 36 33 36 C33 36 29 33 29 30 Z" fill="#ec4899" />
+                <path d="M47 30 C47 27 51 27 51 30 C51 27 55 27 55 30 C55 33 51 36 51 36 C51 36 47 33 47 30 Z" fill="#ec4899" />
                 {/* Pink Blush Cheeks */}
-                <circle cx="27" cy="35" r="3" fill="#f472b6" opacity="0.6" />
-                <circle cx="57" cy="35" r="3" fill="#f472b6" opacity="0.6" />
+                <circle cx="26" cy="35" r="3.5" fill="#f472b6" opacity="0.7" />
+                <circle cx="58" cy="35" r="3.5" fill="#f472b6" opacity="0.7" />
                 {/* Cute W Mouth */}
-                <path d="M36 37 Q 39 40 42 37 Q 46 40 48 37" stroke="#f472b6" strokeWidth="2" strokeLinecap="round" fill="none" />
+                <path d="M35 37 Q 38 40 42 37 Q 45 40 48 37" stroke="#f472b6" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                {/* Floating heart SVG above head */}
+                <path d="M40 2 C40 -1 42.5 -1 42.5 2 C42.5 -1 45 -1 45 2 C45 5 42.5 7 42.5 7 C42.5 7 40 5 40 2 Z" fill="#ec4899" className="animate-bounce" />
               </g>
             )}
 
-            {/* 4. SLEEPY FACE */}
+            {/* 6. SLEEPY FACE (Tidur) */}
             {mood === 'sleepy' && (
               <g>
                 {/* Closed Zzz Eyes */}
-                <line x1="28" y1="31" x2="36" y2="31" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" />
-                <line x1="48" y1="31" x2="56" y2="31" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" />
-                {/* Sleepy Circle Mouth */}
-                <circle cx="42" cy="37" r="2.5" fill="#94a3b8" />
+                <path d="M28 31 L32 34 L36 31" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                <path d="M48 31 L52 34 L56 31" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                {/* Sleep Snot Bubble */}
+                <circle cx="45" cy="38" r="3.5" fill="#93c5fd" opacity="0.6" className="animate-pulse" />
+                {/* Floating Zzz */}
+                <text x="60" y="15" fill="#94a3b8" fontSize="10" fontWeight="bold" className="animate-bounce">Z</text>
+                <text x="67" y="10" fill="#94a3b8" fontSize="8" fontWeight="bold" className="animate-bounce">z</text>
               </g>
             )}
 
-            {/* 5. DEFAULT HAPPY FACE */}
+            {/* 7. DEFAULT HAPPY FACE (Senang) */}
             {mood === 'happy' && (
               <g>
                 {/* Glowing Cyan Eyes */}
@@ -450,8 +550,10 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
                 <circle cx="33" cy="32" r="4" fill="#00f0ff" />
                 <circle cx="51" cy="32" r="4.5" fill="#00f0ff" className="animate-ping" />
                 <circle cx="51" cy="32" r="4" fill="#00f0ff" />
+                <circle cx="34.5" cy="30.5" r="1.2" fill="#ffffff" />
+                <circle cx="52.5" cy="30.5" r="1.2" fill="#ffffff" />
                 {/* Cute Smile Arc */}
-                <path d="M36 37 Q 42 41 48 37" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                <path d="M34 37 Q 42 43 50 37" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" fill="none" />
               </g>
             )}
 
@@ -465,7 +567,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
               width="55"
               height="28"
               rx="10"
-              fill={mood === 'angry' ? '#dc2626' : '#f97316'}
+              fill={mood === 'angry' ? '#dc2626' : mood === 'sad' ? '#1d4ed8' : mood === 'dizzy' ? '#d97706' : '#f97316'}
               stroke="#0f172a"
               strokeWidth="3"
             />
