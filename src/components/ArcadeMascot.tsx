@@ -15,6 +15,10 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isJumping, setIsJumping] = useState<boolean>(false);
   
+  // Pause-on-click state (diem 4 detik saat diklik/dilepas)
+  const [isPaused, setIsPaused] = useState<boolean>(false);
+  const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Emotional Mood Engine
   const [mood, setMood] = useState<MascotMood>('happy');
   const [clickCount, setClickCount] = useState<number>(0);
@@ -29,6 +33,9 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
     initialPosY: -25,
   });
 
+  const isPointerDownRef = useRef<boolean>(false);
+  const hasMovedRef = useRef<boolean>(false);
+
   const clickResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const moodResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -42,9 +49,18 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
     'Kuat Riawan siap diajak berkembang dan kerja sebagai Full-Stack Web Dev!'
   ];
 
-  // Active Walking & Wandering Movement Loop
+  // Pause movement for 4 seconds (diem 4 detik)
+  const triggerPause = () => {
+    setIsPaused(true);
+    if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current);
+    pauseTimerRef.current = setTimeout(() => {
+      setIsPaused(false);
+    }, 4000);
+  };
+
+  // Active Walking & Wandering Movement Loop (Paused if isPaused)
   useEffect(() => {
-    if (isDragging || mood === 'sleepy') return;
+    if (isDragging || isPaused || mood === 'sleepy') return;
 
     const walkSpeed = mood === 'angry' ? 1.2 : 0.45;
     const intervalTime = mood === 'angry' ? 50 : 90;
@@ -72,11 +88,11 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
     }, intervalTime);
 
     return () => clearInterval(interval);
-  }, [direction, isDragging, mood]);
+  }, [direction, isDragging, isPaused, mood]);
 
   // Periodic Random Speech Bubble
   useEffect(() => {
-    if (isDragging || mood === 'angry') return;
+    if (isDragging || isPaused || mood === 'angry') return;
 
     const speechTimer = setInterval(() => {
       if (mood === 'happy') {
@@ -91,12 +107,12 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
     }, 11000);
 
     return () => clearInterval(speechTimer);
-  }, [isDragging, mood]);
+  }, [isDragging, isPaused, mood]);
 
   // Idle Timer -> Sleepy after 18 seconds of no interaction
   useEffect(() => {
     const idleTimer = setTimeout(() => {
-      if (!isDragging && mood === 'happy') {
+      if (!isDragging && !isPaused && mood === 'happy') {
         setMood('sleepy');
         setSpeechBubble('Zzz... ClawBot lagi istirahat sejenak...');
         setShowSpeech(true);
@@ -104,28 +120,24 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
     }, 18000);
 
     return () => clearTimeout(idleTimer);
-  }, [mood, isDragging]);
+  }, [mood, isDragging, isPaused]);
 
   // DRAG & DROP HANDLERS (Mouse & Touch)
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
-    startDrag(e.clientX, e.clientY);
+    startPointer(e.clientX, e.clientY);
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length > 0) {
       const touch = e.touches[0];
-      startDrag(touch.clientX, touch.clientY);
+      startPointer(touch.clientX, touch.clientY);
     }
   };
 
-  const startDrag = (clientX: number, clientY: number) => {
-    soundFx.playGrabPulse();
-    setIsDragging(true);
-    setMood('surprised'); // Kaget saat diangkat!
-    setSpeechBubble('Waaaa! Aku terbang diangkat!');
-    setShowSpeech(true);
-
+  const startPointer = (clientX: number, clientY: number) => {
+    isPointerDownRef.current = true;
+    hasMovedRef.current = false;
     dragRef.current = {
       startX: clientX,
       startY: clientY,
@@ -136,31 +148,50 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
 
   useEffect(() => {
     const handlePointerMove = (clientX: number, clientY: number) => {
-      if (!isDragging) return;
+      if (!isPointerDownRef.current) return;
       const dx = clientX - dragRef.current.startX;
       const dy = clientY - dragRef.current.startY;
-      setPos({
-        x: dragRef.current.initialPosX + dx,
-        y: dragRef.current.initialPosY + dy,
-      });
+      const dist = Math.hypot(dx, dy);
+
+      if (dist > 5 && !isDragging) {
+        setIsDragging(true);
+        hasMovedRef.current = true;
+        soundFx.playGrabPulse();
+        setMood('surprised'); // Kaget saat diangkat!
+        setSpeechBubble('Waaaa! Aku terbang diangkat!');
+        setShowSpeech(true);
+      }
+
+      if (isDragging) {
+        setPos({
+          x: dragRef.current.initialPosX + dx,
+          y: dragRef.current.initialPosY + dy,
+        });
+      }
     };
 
     const handlePointerUp = () => {
-      if (isDragging) {
+      if (!isPointerDownRef.current) return;
+      isPointerDownRef.current = false;
+
+      if (hasMovedRef.current || isDragging) {
         setIsDragging(false);
         setIsJumping(true);
         setTimeout(() => setIsJumping(false), 500);
-        
-        // After drop: Love mood!
+
+        triggerPause(); // Diem 4 detik setelah dilepas!
+
         setMood('love');
         setSpeechBubble('Hehe, terima kasih ya sudah memindahkan aku dengan lembut!');
         setShowSpeech(true);
 
-        // Reset to happy after 3.5s
         if (moodResetTimerRef.current) clearTimeout(moodResetTimerRef.current);
         moodResetTimerRef.current = setTimeout(() => {
           setMood('happy');
         }, 3500);
+      } else {
+        // Single Click Event!
+        triggerMascotClick();
       }
     };
 
@@ -173,12 +204,10 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
     };
     const onTouchEnd = () => handlePointerUp();
 
-    if (isDragging) {
-      window.addEventListener('mousemove', onMouseMove);
-      window.addEventListener('mouseup', onMouseUp);
-      window.addEventListener('touchmove', onTouchMove);
-      window.addEventListener('touchend', onTouchEnd);
-    }
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('touchmove', onTouchMove);
+    window.addEventListener('touchend', onTouchEnd);
 
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
@@ -186,16 +215,17 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
       window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);
     };
-  }, [isDragging]);
+  }, [isDragging, pos]);
 
   // Click & Emotional Reaction Logic!
-  const handleMascotClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isDragging) return;
+  const triggerMascotClick = () => {
     soundFx.playGrabPulse();
 
     setIsJumping(true);
     setTimeout(() => setIsJumping(false), 500);
+
+    // Diem dulu 4 detik saat diklik!
+    triggerPause();
 
     const nextCount = clickCount + 1;
     setClickCount(nextCount);
@@ -320,7 +350,6 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
 
         {/* 2D Interactive Robot Pet SVG Character with Dynamic Expressions */}
         <div
-          onClick={handleMascotClick}
           className={`transition-transform duration-300 ${
             isDragging
               ? 'rotate-12 scale-110 drop-shadow-2xl'
@@ -449,8 +478,8 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = ({ onScrollToArcade }) 
             <circle cx="42.5" cy="67" r="4" fill="#3b82f6" />
             <circle cx="54" cy="67" r="4" fill="#10b981" />
 
-            {/* Animated Walking Feet / Legs */}
-            <g className={isDragging ? 'animate-bounce' : 'animate-bounce'} style={{ animationDuration: mood === 'angry' ? '0.2s' : '0.4s' }}>
+            {/* Animated Walking Feet / Legs (Disable bounce when paused) */}
+            <g className={isDragging || isPaused ? '' : 'animate-bounce'} style={{ animationDuration: mood === 'angry' ? '0.2s' : '0.4s' }}>
               <rect x="26" y="81" width="11" height="9" rx="4" fill="#1e293b" />
               <rect x="48" y="81" width="11" height="9" rx="4" fill="#1e293b" />
             </g>
