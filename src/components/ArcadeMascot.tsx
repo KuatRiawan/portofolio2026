@@ -853,49 +853,72 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
             title="Klik atau geser Kiko!"
           >
             <svg width="90" height="100" viewBox="0 0 90 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-2xl">
-              
+              <defs>
+                {/* Warm 3D Orange Fur Radial Gradient */}
+                <radialGradient id="foxHeadFur" cx="40%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#fb923c" />
+                  <stop offset="60%" stopColor="#ea580c" />
+                  <stop offset="100%" stopColor="#c2410c" />
+                </radialGradient>
+
+                {/* Real Pixar-style Warm Amber Animal Eye Iris */}
+                <radialGradient id="foxAmberEye" cx="35%" cy="35%" r="65%">
+                  <stop offset="0%" stopColor="#fef08a" />
+                  <stop offset="35%" stopColor="#f59e0b" />
+                  <stop offset="80%" stopColor="#b45309" />
+                  <stop offset="100%" stopColor="#451a03" />
+                </radialGradient>
+
+                {/* Soft Fluffy White Fur Gradient */}
+                <linearGradient id="whiteFurGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ffffff" />
+                  <stop offset="100%" stopColor="#ffedd5" />
+                </linearGradient>
+              </defs>
+
               {/* FLUFFY FOX TAIL (Clickable Easter Egg!) */}
               <g onClick={handleTailClick} className="cursor-pointer group/tail">
                 <path
-                  d="M60 55 C75 45 88 50 85 70 C82 85 68 88 55 78 C48 72 52 60 60 55 Z"
-                  fill="#ea580c"
+                  d="M60 52 C76 42 90 48 86 68 C83 83 68 86 54 76 C47 70 52 58 60 52 Z"
+                  fill="url(#foxHeadFur)"
                   className={mood === 'love' || isHovered ? 'animate-bounce' : ''}
                 />
                 {/* Dark Navy Tail Accent */}
-                <path d="M72 52 C78 50 84 56 82 66 C80 72 75 75 70 70 Z" fill="#0f172a" />
+                <path d="M72 49 C78 47 84 53 82 63 C80 69 75 72 70 67 Z" fill="#0f172a" />
                 {/* Fluffy White Tail Tip */}
-                <path d="M78 62 C85 65 82 75 75 77 C72 74 74 68 78 62 Z" fill="#ffffff" />
+                <path d="M78 59 C85 62 82 72 75 74 C72 71 74 65 78 59 Z" fill="url(#whiteFurGrad)" />
               </g>
 
               {/* FOX POINTY EARS */}
               {/* Left Ear */}
-              <path d="M22 28 L14 6 C12 2 18 2 24 8 L32 24 Z" fill="#ea580c" />
-              <path d="M20 25 L15 9 C14 7 17 7 21 11 L27 22 Z" fill="#0f172a" />
-              <path d="M23 23 L18 12 C18 10 20 10 22 13 L26 21 Z" fill="#fdba74" />
+              <path d="M22 28 C 14 18 10 2 24 6 C 28 12 30 20 32 26 Z" fill="url(#foxHeadFur)" stroke="#0f172a" strokeWidth="2.5" />
+              <path d="M20 25 C 15 17 12 7 21 9 C 24 13 25 19 27 23 Z" fill="#0f172a" />
+              <path d="M22 23 C 18 17 16 10 21 11 C 23 14 24 18 25 21 Z" fill="#fdba74" />
 
               {/* Right Ear */}
-              <path d="M68 28 L76 6 C78 2 72 2 66 8 L58 24 Z" fill="#ea580c" />
-              <path d="M70 25 L75 9 C76 7 73 7 69 11 L63 22 Z" fill="#0f172a" />
-              <path d="M67 23 L72 12 C72 10 70 10 68 13 L64 21 Z" fill="#fdba74" />
+              <path d="M68 28 C 76 18 80 2 66 6 C 62 12 60 20 58 26 Z" fill="url(#foxHeadFur)" stroke="#0f172a" strokeWidth="2.5" />
+              <path d="M70 25 C 75 17 78 7 69 9 C 66 13 65 19 63 23 Z" fill="#0f172a" />
+              <path d="M68 23 C 72 17 74 10 69 11 C 67 14 66 18 65 21 Z" fill="#fdba74" />
 
               {/* WARM ORANGE 3D ANIMAL FOX HEAD */}
-              <circle cx="45" cy="32" r="22" fill="#ea580c" stroke="#0f172a" strokeWidth="3" />
+              <circle cx="45" cy="32" r="22" fill="url(#foxHeadFur)" stroke="#0f172a" strokeWidth="3" />
               
               {/* FLUFFY WHITE CHEEKS & MUZZLE */}
-              <path d="M23 32 Q 20 46 45 47 Q 70 46 67 32 Q 68 47 45 48 Q 22 47 23 32 Z" fill="#ffffff" />
-              <ellipse cx="45" cy="38" rx="12" ry="7" fill="#ffffff" />
+              <path d="M23 32 Q 20 46 45 47 Q 70 46 67 32 Q 68 47 45 48 Q 22 47 23 32 Z" fill="url(#whiteFurGrad)" />
+              <ellipse cx="45" cy="38" rx="12" ry="7" fill="url(#whiteFurGrad)" />
               
               {/* CUTE ANIMAL NOSE */}
               <ellipse cx="45" cy="35.5" rx="3.5" ry="2.5" fill="#0f172a" />
+              <ellipse cx="44" cy="34.8" rx="1.2" ry="0.7" fill="#ffffff" opacity="0.6" />
 
-              {/* GLOWING CYAN DIGITAL EYES & FACIAL EXPRESSIONS */}
+              {/* REAL ANIMAL AMBER EYES & FACIAL EXPRESSIONS */}
 
               {/* CHARGING MODE */}
               {mood === 'charging' && (
                 <g>
-                  <path d="M30 28 L38 28" stroke="#22d3ee" strokeWidth="3" strokeLinecap="round" />
-                  <path d="M52 28 L60 28" stroke="#22d3ee" strokeWidth="3" strokeLinecap="round" />
-                  <path d="M41 40 Q 45 43 49 40" stroke="#22d3ee" strokeWidth="2" strokeLinecap="round" fill="none" />
+                  <path d="M30 28 Q 34 32 38 28" stroke="#78350f" strokeWidth="3" strokeLinecap="round" fill="none" />
+                  <path d="M52 28 Q 56 32 60 28" stroke="#78350f" strokeWidth="3" strokeLinecap="round" fill="none" />
+                  <path d="M41 40 Q 45 43 49 40" stroke="#7c2d12" strokeWidth="2" strokeLinecap="round" fill="none" />
                 </g>
               )}
 
@@ -904,9 +927,11 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
                 <g>
                   <line x1="26" y1="20" x2="38" y2="25" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
                   <line x1="64" y1="20" x2="52" y2="25" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
-                  <circle cx="34" cy="28" r="4" fill="#ef4444" className="animate-ping" />
-                  <circle cx="56" cy="28" r="4" fill="#ef4444" className="animate-ping" />
-                  <path d="M38 41 L42 37 L46 41 L50 37 L54 41" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" fill="none" />
+                  <circle cx="34" cy="28" r="4.5" fill="#dc2626" />
+                  <circle cx="56" cy="28" r="4.5" fill="#dc2626" />
+                  <circle cx="34" cy="28" r="2" fill="#0f172a" />
+                  <circle cx="56" cy="28" r="2" fill="#0f172a" />
+                  <path d="M38 41 L42 37 L46 41 L50 37 L54 41" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" fill="none" />
                 </g>
               )}
 
@@ -916,31 +941,31 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
                   <g className="animate-spin" style={{ transformOrigin: '45px 5px', animationDuration: '2s' }}>
                     <polygon points="45,0 46.5,3 49.5,3.5 47,5.5 47.5,8.5 45,7 42.5,8.5 43,5.5 40.5,3.5 43.5,3" fill="#f59e0b" />
                   </g>
-                  <path d="M30 28 A 3 3 0 1 1 34 30 A 1.5 1.5 0 1 1 32 28" stroke="#f59e0b" strokeWidth="2.5" fill="none" className="animate-spin" style={{ transformOrigin: '32px 28px' }} />
-                  <path d="M54 28 A 3 3 0 1 1 58 30 A 1.5 1.5 0 1 1 56 28" stroke="#f59e0b" strokeWidth="2.5" fill="none" className="animate-spin" style={{ transformOrigin: '56px 28px' }} />
-                  <path d="M38 40 Q 45 36 52 40" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                  <path d="M30 28 A 3 3 0 1 1 34 30 A 1.5 1.5 0 1 1 32 28" stroke="#d97706" strokeWidth="2.5" fill="none" className="animate-spin" style={{ transformOrigin: '32px 28px' }} />
+                  <path d="M54 28 A 3 3 0 1 1 58 30 A 1.5 1.5 0 1 1 56 28" stroke="#d97706" strokeWidth="2.5" fill="none" className="animate-spin" style={{ transformOrigin: '56px 28px' }} />
+                  <path d="M38 40 Q 45 36 52 40" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" fill="none" />
                 </g>
               )}
 
               {/* SAD FACE */}
               {mood === 'sad' && (
                 <g>
-                  <line x1="26" y1="22" x2="38" y2="19" stroke="#60a5fa" strokeWidth="3" strokeLinecap="round" />
-                  <line x1="64" y1="22" x2="52" y2="19" stroke="#60a5fa" strokeWidth="3" strokeLinecap="round" />
-                  <circle cx="34" cy="28" r="4" fill="#3b82f6" />
-                  <circle cx="56" cy="28" r="4" fill="#3b82f6" />
-                  <path d="M38 42 Q 45 37 52 42" stroke="#60a5fa" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                  <line x1="26" y1="22" x2="38" y2="19" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" />
+                  <line x1="64" y1="22" x2="52" y2="19" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" />
+                  <circle cx="34" cy="28" r="4.5" fill="url(#foxAmberEye)" />
+                  <circle cx="56" cy="28" r="4.5" fill="url(#foxAmberEye)" />
+                  <path d="M38 42 Q 45 37 52 42" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" fill="none" />
                 </g>
               )}
 
               {/* SURPRISED FACE */}
               {mood === 'surprised' && (
                 <g>
-                  <circle cx="34" cy="27" r="5" fill="#fde047" />
-                  <circle cx="56" cy="27" r="5" fill="#fde047" />
-                  <circle cx="34" cy="27" r="2" fill="#0f172a" />
-                  <circle cx="56" cy="27" r="2" fill="#0f172a" />
-                  <circle cx="45" cy="39" r="3.5" fill="#0f172a" stroke="#fde047" strokeWidth="2" />
+                  <circle cx="34" cy="27" r="5.5" fill="url(#foxAmberEye)" />
+                  <circle cx="56" cy="27" r="5.5" fill="url(#foxAmberEye)" />
+                  <circle cx="34" cy="27" r="2.5" fill="#0f172a" />
+                  <circle cx="56" cy="27" r="2.5" fill="#0f172a" />
+                  <circle cx="45" cy="39" r="3.5" fill="#0f172a" />
                 </g>
               )}
 
@@ -966,46 +991,49 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
                 </g>
               )}
 
-              {/* DEFAULT HAPPY FACE WITH CURSOR TRACKING DIGITAL CYAN EYES */}
+              {/* DEFAULT HAPPY FACE WITH WARM AMBER ANIMAL EYES & CURSOR TRACKING */}
               {mood === 'happy' && (
                 <g>
-                  <circle cx="34" cy="28" r="5" fill="#00f0ff" />
-                  <circle cx="56" cy="28" r="5" fill="#00f0ff" />
+                  <circle cx="34" cy="28" r="5.5" fill="url(#foxAmberEye)" />
+                  <circle cx="56" cy="28" r="5.5" fill="url(#foxAmberEye)" />
                   {/* Pupils tracking cursor */}
-                  <circle cx={34 + eyeOffset.dx} cy={28 + eyeOffset.dy} r="2.2" fill="#0f172a" />
-                  <circle cx={56 + eyeOffset.dx} cy={28 + eyeOffset.dy} r="2.2" fill="#0f172a" />
-                  <circle cx={35.5 + eyeOffset.dx} cy={26.5 + eyeOffset.dy} r="1" fill="#ffffff" />
-                  <circle cx={57.5 + eyeOffset.dx} cy={26.5 + eyeOffset.dy} r="1" fill="#ffffff" />
+                  <circle cx={34 + eyeOffset.dx} cy={28 + eyeOffset.dy} r="2.5" fill="#0f172a" />
+                  <circle cx={56 + eyeOffset.dx} cy={28 + eyeOffset.dy} r="2.5" fill="#0f172a" />
+                  {/* Double Catchlight Reflections */}
+                  <circle cx={35.5 + eyeOffset.dx} cy={26.5 + eyeOffset.dy} r="1.2" fill="#ffffff" />
+                  <circle cx={57.5 + eyeOffset.dx} cy={26.5 + eyeOffset.dy} r="1.2" fill="#ffffff" />
+                  <circle cx={33 + eyeOffset.dx} cy={29.5 + eyeOffset.dy} r="0.6" fill="#ffffff" opacity="0.7" />
+                  <circle cx={55 + eyeOffset.dx} cy={29.5 + eyeOffset.dy} r="0.6" fill="#ffffff" opacity="0.7" />
                   {/* Pink Cheek Blush */}
                   <circle cx="24" cy="33" r="3" fill="#f472b6" opacity="0.5" />
                   <circle cx="66" cy="33" r="3" fill="#f472b6" opacity="0.5" />
                   {/* Cute Smile Arc */}
-                  <path d="M37 38 Q 45 44 53 38" stroke="#ea580c" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                  <path d="M37 38 Q 45 44 53 38" stroke="#7c2d12" strokeWidth="2.5" strokeLinecap="round" fill="none" />
                 </g>
               )}
 
-              {/* SOFT MINT GREEN TECH COLLAR PENDANT */}
-              <circle cx="45" cy="51" r="3.5" fill="#22d3ee" stroke="#0f172a" strokeWidth="1.5" className="animate-pulse" />
+              {/* SOFT CHEST FUR TUFT */}
+              <path d="M42 46 L45 52 L48 46 L51 50 L45 44 L39 50 Z" fill="url(#whiteFurGrad)" />
 
               {/* SOFT PEAR-SHAPED ORGANIC ANIMAL BODY */}
               <path
                 d="M25 50 Q 18 78 45 78 Q 72 78 65 50 Q 45 54 25 50 Z"
-                fill={mood === 'angry' ? '#dc2626' : mood === 'sad' ? '#1d4ed8' : mood === 'dizzy' ? '#d97706' : '#ea580c'}
+                fill={mood === 'angry' ? '#dc2626' : mood === 'sad' ? '#1d4ed8' : mood === 'dizzy' ? '#d97706' : 'url(#foxHeadFur)'}
                 stroke="#0f172a"
                 strokeWidth="3"
               />
               
               {/* FLUFFY WHITE CHEST / BELLY */}
-              <ellipse cx="45" cy="65" rx="13" ry="10" fill="#ffffff" />
+              <ellipse cx="45" cy="65" rx="13" ry="10" fill="url(#whiteFurGrad)" />
 
               {/* SOFT DARK NAVY ANIMAL PAWS */}
               <ellipse cx="36" cy="67" rx="3.5" ry="3" fill="#0f172a" />
               <ellipse cx="54" cy="67" rx="3.5" ry="3" fill="#0f172a" />
 
-              {/* ANIMATED FEET */}
+              {/* ANIMATED ROUND ANIMAL FEET */}
               <g className={isDragging || isPaused ? '' : 'animate-bounce'} style={{ animationDuration: isRunning ? '0.15s' : mood === 'angry' ? '0.2s' : '0.4s' }}>
-                <rect x="29" y="82" width="11" height="9" rx="4" fill="#0f172a" />
-                <rect x="50" y="82" width="11" height="9" rx="4" fill="#0f172a" />
+                <ellipse cx="34" cy="85" rx="5.5" ry="4" fill="#0f172a" />
+                <ellipse cx="56" cy="85" rx="5.5" ry="4" fill="#0f172a" />
               </g>
             </svg>
           </div>
