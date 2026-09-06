@@ -77,43 +77,50 @@ export const MesinControlPanel: React.FC<MesinControlPanelProps> = ({
   };
 
   return (
-    <div className="w-full bg-[#cbd5e1] border-4 border-slate-300 rounded-3xl p-4 shadow-xl relative space-y-4 select-none">
+    <div className="w-full bg-[#cbd5e1] border-2 sm:border-4 border-slate-300 rounded-2xl sm:rounded-3xl p-2.5 sm:p-4 shadow-xl relative space-y-3 sm:space-y-4 select-none">
       
-      {/* Top Arcade Pedestal Surface: Joystick & CAPIT Button */}
-      <div className="bg-[#94a3b8]/40 p-4 rounded-2xl border-2 border-slate-400 flex items-center justify-around relative">
+      {/* Top Arcade Pedestal Surface: Joystick + Touch Arrows & CAPIT Button */}
+      <div className="bg-[#94a3b8]/40 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-slate-400 flex flex-wrap items-center justify-around gap-3 relative">
         
-        {/* Center Interactive Joystick Knob */}
-        <div className="relative flex flex-col items-center">
-          <div className="w-20 h-20 rounded-full bg-slate-400 border-4 border-slate-500 shadow-inner flex items-center justify-center relative">
-            <div
-              ref={joystickRef}
-              onPointerDown={handlePointerDown}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerCancel={handlePointerUp}
-              className="w-14 h-14 rounded-full bg-slate-600 flex items-center justify-center relative cursor-grab active:cursor-grabbing touch-none"
-            >
-              <button
-                onClick={() => handleJoystickPress(-1, 0)}
-                className="absolute left-0.5 text-xs text-white z-10 font-bold"
-              >
-                ◀
-              </button>
-              <button
-                onClick={() => handleJoystickPress(1, 0)}
-                className="absolute right-0.5 text-xs text-white z-10 font-bold"
-              >
-                ▶
-              </button>
+        {/* Joystick & Directional Touch Arrows Group */}
+        <div className="flex items-center space-x-2 shrink-0">
+          <button
+            onClick={() => handleJoystickPress(-1, 0)}
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-slate-700 hover:bg-slate-800 active:bg-slate-900 border-2 border-slate-500 text-white font-black text-base sm:text-lg flex items-center justify-center shadow-md active:scale-95 transition-transform shrink-0"
+            title="Geser Kiri"
+          >
+            ◀
+          </button>
+
+          {/* Center Interactive Joystick Knob */}
+          <div className="relative flex flex-col items-center">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-slate-400 border-2 sm:border-4 border-slate-500 shadow-inner flex items-center justify-center relative">
               <div
-                className="w-9 h-9 rounded-full bg-gradient-to-b from-[#ff8c00] to-[#e64a19] border-2 border-white shadow-md transition-transform duration-75 pointer-events-none"
-                style={{ transform: `translate(${joystickTilt.x}px, ${joystickTilt.y}px)` }}
-              />
+                ref={joystickRef}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerUp}
+                className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-slate-600 flex items-center justify-center relative cursor-grab active:cursor-grabbing touch-none"
+              >
+                <div
+                  className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-b from-[#ff8c00] to-[#e64a19] border-2 border-white shadow-md transition-transform duration-75 pointer-events-none"
+                  style={{ transform: `translate(${joystickTilt.x}px, ${joystickTilt.y}px)` }}
+                />
+              </div>
             </div>
+            <span className="text-[9px] sm:text-[10px] font-fredoka font-bold text-slate-700 mt-0.5 uppercase tracking-wider">
+              {t.arcadeMoveJoystick}
+            </span>
           </div>
-          <span className="text-[10px] font-fredoka font-bold text-slate-600 mt-1 uppercase tracking-wider">
-            {t.arcadeMoveJoystick}
-          </span>
+
+          <button
+            onClick={() => handleJoystickPress(1, 0)}
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-slate-700 hover:bg-slate-800 active:bg-slate-900 border-2 border-slate-500 text-white font-black text-base sm:text-lg flex items-center justify-center shadow-md active:scale-95 transition-transform shrink-0"
+            title="Geser Kanan"
+          >
+            ▶
+          </button>
         </div>
 
         {/* Right Large Pill CAPIT Button */}
@@ -123,7 +130,7 @@ export const MesinControlPanel: React.FC<MesinControlPanelProps> = ({
             onGrabTrigger();
           }}
           disabled={isGrabbing}
-          className={`px-8 py-4 rounded-3xl font-fredoka font-black text-2xl tracking-wider text-white border-4 border-orange-300 shadow-xl transition-all ${
+          className={`px-5 py-3 sm:px-8 sm:py-4 rounded-2xl sm:rounded-3xl font-fredoka font-black text-lg sm:text-2xl tracking-wider text-white border-2 sm:border-4 border-orange-300 shadow-xl transition-all ${
             isGrabbing
               ? 'bg-slate-400 cursor-not-allowed opacity-60'
               : 'btn-capit-3d hover:brightness-110 active:scale-95'

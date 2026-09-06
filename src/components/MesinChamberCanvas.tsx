@@ -492,11 +492,23 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
     soundFx.playMoveWhirr();
   };
 
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas || e.touches.length === 0) return;
+    const rect = canvas.getBoundingClientRect();
+    const touchX = e.touches[0].clientX - rect.left;
+    const normX = Math.max(0.15, Math.min(0.85, touchX / rect.width));
+    onClawMove(normX, 0.25);
+    soundFx.playMoveWhirr();
+  };
+
   return (
-    <div className="relative w-full h-[460px] lg:h-[520px] rounded-3xl overflow-hidden border-4 border-slate-300 bg-sky-200 shadow-xl group">
+    <div className="relative w-full h-[300px] xs:h-[340px] sm:h-[400px] md:h-[460px] lg:h-[520px] rounded-2xl sm:rounded-3xl overflow-hidden border-2 sm:border-4 border-slate-300 bg-sky-200 shadow-xl group">
       <canvas
         ref={canvasRef}
         onClick={handleCanvasClick}
+        onTouchStart={handleTouchMove}
+        onTouchMove={handleTouchMove}
         className="w-full h-full cursor-crosshair touch-none"
       />
     </div>
