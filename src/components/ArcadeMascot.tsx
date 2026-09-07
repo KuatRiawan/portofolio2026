@@ -131,7 +131,7 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
     <group ref={group} dispose={null}>
       {/* Adjusted scale so it fits nicely on the screen */}
       <group rotation={[0, 0, 0]}>
-        <primitive object={scene} scale={3} position={[0, -0.4, 0]} />
+        <primitive object={scene} scale={3} position={[0, -0.4, 0]} rotation={[0, theme === 'dark' ? Math.PI : 0, 0]} />
       </group>
     </group>
   );
