@@ -69,14 +69,6 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
     } else if (mood === 'excited' || mood === 'waving') {
       targetPosition.y = -0.4 + Math.abs(Math.sin(time * 15)) * 0.2;
       targetRotation.x = -0.2;
-    }
-
-    // In v2, the character for dark mode (Object_16) was modeled facing backwards by default
-    // We offset the rotation by 180 degrees (Math.PI) so it faces forwards
-    if (theme === 'dark') {
-      targetRotation.y += Math.PI;
-    }
-    
     // Apply rotation smoothing
     group.current.rotation.y = THREE.MathUtils.lerp(group.current.rotation.y, targetRotation.y, delta * 5);
     group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, targetRotation.x, delta * 5);
@@ -134,7 +126,7 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
   return (
     <group ref={group} dispose={null}>
       {/* Adjusted scale so it fits nicely on the screen */}
-      <group rotation={[0, 0, 0]}>
+      <group rotation={[0, theme === 'dark' ? Math.PI : 0, 0]}>
         <primitive object={scene} scale={3} position={[0, -0.4, 0]} />
       </group>
     </group>
