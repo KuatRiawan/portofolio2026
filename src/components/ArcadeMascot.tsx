@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { soundFx } from '../services/soundEffects';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, ContactShadows, useAnimations } from '@react-three/drei';
@@ -12,16 +12,18 @@ interface ArcadeMascotProps {
 export type MascotMood = 'happy' | 'angry' | 'dizzy' | 'sad' | 'surprised' | 'love' | 'sleepy' | 'charging' | 'excited' | 'thinking' | 'shy' | 'sitting' | 'waving' | 'peeking';
 
 // The 3D Model Component inside the Canvas
-function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeOffset }: { 
+function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeOffset, theme }: { 
   mood: MascotMood; 
   isDragging: boolean;
   isFalling: boolean;
   isWalking: boolean;
   facingRight: boolean;
   eyeOffset: { dx: number, dy: number };
+  theme: string;
 }) {
   const group = useRef<THREE.Group>(null);
-  const { scene, animations } = useGLTF('/Karakter/ssrbs_2.0_hololive.glb') as any;
+  const gltfPath = theme === 'dark' ? '/Karakter/ssrbs_hololive.glb' : '/Karakter/ssrbs_2.0_hololive.glb';
+  const { scene, animations } = useGLTF(gltfPath) as any;
   const { actions } = useAnimations(animations, group);
 
   useEffect(() => {
@@ -123,9 +125,10 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
 
 // Preload to avoid jitter
 useGLTF.preload('/Karakter/ssrbs_2.0_hololive.glb');
+useGLTF.preload('/Karakter/ssrbs_hololive.glb');
 
 export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
-  const { toggleTheme } = useApp();
+  const { theme, toggleTheme } = useAppContext();
   const [isPetMode, setIsPetMode] = useState(false);
   // ─── STATE ───
   const [mood, setMood] = useState<MascotMood>('happy');
@@ -667,14 +670,17 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
               <directionalLight position={[5, 5, 5]} intensity={1.5} castShadow />
               <directionalLight position={[-5, 5, 5]} intensity={0.5} />
               
-              <MascotModel 
-                mood={mood}
-                isDragging={isDragging}
-                isFalling={isFalling}
-                isWalking={isWalking}
-                facingRight={facingRight}
-                eyeOffset={eyeOffset}
-              />
+              <Suspense fallback={null}>
+                <MascotModel 
+                  mood={mood}
+                  isDragging={isDragging}
+                  isFalling={isFalling}
+                  isWalking={isWalking}
+                  facingRight={facingRight}
+                  eyeOffset={eyeOffset}
+                  theme={theme}
+                />
+              </Suspense>
               
               {/* Subtle drop shadow underneath the 3D model */}
               <ContactShadows position={[0, -0.6, 0]} opacity={0.4} scale={5} blur={2} far={4} />
