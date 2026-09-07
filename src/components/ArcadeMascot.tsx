@@ -78,8 +78,13 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
     group.current.position.y = THREE.MathUtils.damp(group.current.position.y, targetPosition.y, 5, delta);
     group.current.position.z = THREE.MathUtils.damp(group.current.position.z, targetPosition.z, 5, delta);
     
-    // Apply Morph Targets (Expressions) based on mood
+    // Apply Morph Targets (Expressions) and hide extra characters
     scene.traverse((node: any) => {
+      // Hide the black and green SSRBs (they use names starting with Object_10, 11, 16)
+      if (node.isMesh && (node.name.startsWith('Object_10') || node.name.startsWith('Object_11') || node.name.startsWith('Object_16'))) {
+        node.visible = false;
+      }
+      
       if (node.isMesh && node.morphTargetInfluences) {
         // Reset all morphs
         for(let i=0; i<node.morphTargetInfluences.length; i++) {
@@ -107,7 +112,7 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
   return (
     <group ref={group} dispose={null}>
       {/* Adjusted scale so it fits nicely on the screen */}
-      <group rotation={[0, Math.PI, 0]}>
+      <group rotation={[0, 0, 0]}>
         <primitive object={scene} scale={3} position={[0, -0.4, 0]} />
       </group>
     </group>
