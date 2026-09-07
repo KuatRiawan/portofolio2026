@@ -20,48 +20,17 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
   eyeOffset: { dx: number, dy: number };
 }) {
   const group = useRef<THREE.Group>(null);
-  const { scene, animations } = useGLTF('/Karakter/kai_-_the_little_fox_warrior_animated.glb') as any;
+  const { scene, animations } = useGLTF('/Karakter/ssrbs_2.0_hololive.glb') as any;
   const { actions } = useAnimations(animations, group);
 
   useEffect(() => {
     if (!actions) return;
-    
     const actionNames = Object.keys(actions);
-    if (actionNames.length === 0) return;
-
-    console.log('Available animations for Kai:', actionNames);
-
-    // Stop all current actions
-    actionNames.forEach(name => actions[name]?.stop());
-
-    // Decide which one to play based on exact known names from Kai
-    let targetAction = 'Idle';
-    if (isWalking) {
-      targetAction = 'Run';
-    } else if (mood === 'waving' || mood === 'happy' || mood === 'excited') {
-      targetAction = 'Hello'; // Great for greeting the user
-    } else if (mood === 'charging' || mood === 'sleepy') {
-      targetAction = 'Pray'; // Best fit for stationary rest/focus
-    } else if (mood === 'dizzy') {
-      targetAction = 'T-Pose'; // Funny static pose when dizzy
+    if (actionNames.length > 0) {
+      const action = actions[actionNames[0]];
+      if (action) action.reset().fadeIn(0.2).play();
     }
-
-    // Fallback if the animation doesn't exist (e.g., if a different character is loaded later)
-    if (!actions[targetAction]) {
-      targetAction = actionNames[0];
-    }
-
-    const action = targetAction ? actions[targetAction] : null;
-    if (action) {
-      action.reset().fadeIn(0.2).play();
-    }
-
-    return () => {
-      if (action) {
-        action.fadeOut(0.2);
-      }
-    };
-  }, [actions, isWalking, mood]);
+  }, [actions]);
 
 
   useFrame((state, delta) => {
@@ -108,21 +77,45 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
     group.current.position.x = THREE.MathUtils.damp(group.current.position.x, targetPosition.x, 5, delta);
     group.current.position.y = THREE.MathUtils.damp(group.current.position.y, targetPosition.y, 5, delta);
     group.current.position.z = THREE.MathUtils.damp(group.current.position.z, targetPosition.z, 5, delta);
-    // Removed procedural bone animation to rely on built-in GLB animations
+    
+    // Apply Morph Targets (Expressions) based on mood
+    scene.traverse((node: any) => {
+      if (node.isMesh && node.morphTargetInfluences) {
+        // Reset all morphs
+        for(let i=0; i<node.morphTargetInfluences.length; i++) {
+          node.morphTargetInfluences[i] = THREE.MathUtils.lerp(node.morphTargetInfluences[i], 0, delta * 15);
+        }
+        
+        let targetIndex = -1;
+        if (mood === 'happy') targetIndex = 0;
+        else if (mood === 'excited') targetIndex = 1;
+        else if (mood === 'angry') targetIndex = 2;
+        else if (mood === 'dizzy') targetIndex = 3;
+        else if (mood === 'sad') targetIndex = 4;
+        else if (mood === 'surprised') targetIndex = 5;
+        else if (mood === 'sleepy' || mood === 'charging') targetIndex = 6;
+        else if (mood === 'shy') targetIndex = 7;
+        else if (mood === 'waving') targetIndex = 8;
+        
+        if (targetIndex >= 0 && targetIndex < node.morphTargetInfluences.length) {
+           node.morphTargetInfluences[targetIndex] = THREE.MathUtils.lerp(node.morphTargetInfluences[targetIndex], 1, delta * 15);
+        }
+      }
+    });
   });
 
   return (
     <group ref={group} dispose={null}>
       {/* Adjusted scale so it fits nicely on the screen */}
-      <group rotation={[0, 0, 0]}>
-        <primitive object={scene} scale={2.5} position={[0, -0.2, 0]} />
+      <group rotation={[0, Math.PI, 0]}>
+        <primitive object={scene} scale={3} position={[0, -0.4, 0]} />
       </group>
     </group>
   );
 }
 
 // Preload to avoid jitter
-useGLTF.preload('/Karakter/kai_-_the_little_fox_warrior_animated.glb');
+useGLTF.preload('/Karakter/ssrbs_2.0_hololive.glb');
 
 export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
   // ─── STATE ───
