@@ -82,12 +82,12 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
     scene.traverse((node: any) => {
       // Toggle meshes based on theme
       // White SSRB starts with Object_5
-      // Black SSRB starts with Object_10 or Object_11
-      // Green SSRB starts with Object_16
+      // Black SSRB starts with Object_16 (previously thought to be green)
+      // Green SSRB starts with Object_10 or Object_11
       if (node.isMesh) {
         if (theme === 'dark') {
           // Show black, hide others
-          if (node.name.startsWith('Object_10') || node.name.startsWith('Object_11')) {
+          if (node.name.startsWith('Object_16')) {
             node.visible = true;
           } else {
             node.visible = false;
