@@ -551,7 +551,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
           
           {/* ── SPEECH BUBBLE ── */}
           <div 
-            className={`absolute -top-10 bg-white/90 backdrop-blur text-slate-800 text-xs font-medium px-4 py-2 rounded-2xl rounded-bl-sm shadow-xl border border-white/50 transition-all duration-300 origin-bottom-left z-10 
+            className={`absolute top-12 bg-white/90 backdrop-blur text-slate-800 text-xs font-medium px-4 py-2 rounded-2xl rounded-bl-sm shadow-xl border border-white/50 transition-all duration-300 origin-bottom-left z-10 
               ${(isHovered || mood === 'thinking' || mood === 'excited' || mood === 'angry') && !isDragging && !isFalling && !isPeeking ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}
             `}
             style={{ width: 'max-content', left: '75%' }}
