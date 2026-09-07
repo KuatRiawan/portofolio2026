@@ -3,6 +3,7 @@ import { soundFx } from '../services/soundEffects';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, ContactShadows, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
+import { useAppContext } from '../context/AppContext';
 
 interface ArcadeMascotProps {
   onScrollToArcade?: () => void;
@@ -124,6 +125,8 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
 useGLTF.preload('/Karakter/ssrbs_2.0_hololive.glb');
 
 export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
+  const { toggleTheme } = useAppContext();
+  const [isPetMode, setIsPetMode] = useState(false);
   // ─── STATE ───
   const [mood, setMood] = useState<MascotMood>('happy');
   const [isHovered, setIsHovered] = useState(false);
@@ -227,12 +230,34 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
     const resizeHandler = () => {
       homeBasePos.y = window.innerHeight - 170;
     };
+    
+    let lastScrollY = window.scrollY;
+    let lastScrollTime = performance.now();
+    
+    const scrollHandler = () => {
+      const currentScrollY = window.scrollY;
+      const currentTime = performance.now();
+      const dt = currentTime - lastScrollTime;
+      
+      if (dt > 20) {
+         const speed = Math.abs(currentScrollY - lastScrollY) / dt;
+         if (speed > 2.5) {
+            setMood('dizzy');
+         }
+      }
+      
+      lastScrollY = currentScrollY;
+      lastScrollTime = currentTime;
+    };
+
     window.addEventListener('resize', resizeHandler);
+    window.addEventListener('scroll', scrollHandler);
     
     resetIdleTimer();
     return () => {
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       window.removeEventListener('resize', resizeHandler);
+      window.removeEventListener('scroll', scrollHandler);
     };
   }, []);
 
@@ -240,7 +265,18 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       resetIdleTimer();
-      if (!mascotRef.current || isDragging || isFalling || isRecovering || isWalking) return;
+      if (!mascotRef.current || isDragging || isFalling || isRecovering) return;
+      
+      if (isPetMode) {
+         const distanceToCursor = Math.sqrt(Math.pow(e.pageX - 100 - pos.x, 2) + Math.pow(e.pageY - 120 - pos.y, 2));
+         if (distanceToCursor > 100) {
+           setTargetPos({ x: e.pageX - 100, y: e.pageY - 120 });
+           setIsWalking(true);
+           setMood('happy');
+         }
+      } else if (isWalking) {
+         return;
+      }
       
       const rect = mascotRef.current.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
@@ -269,7 +305,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
     
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [isDragging, isFalling, isRecovering, isWalking, mood, facingRight]);
+  }, [isDragging, isFalling, isRecovering, isWalking, mood, facingRight, isPetMode, pos]);
 
   // ─── Click-to-Walk ───
   useEffect(() => {
@@ -433,6 +469,14 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
       return;
     }
     
+    // Check if dropped at top right for Dark Mode switch
+    if (pos.x > window.scrollX + window.innerWidth - 200 && pos.y < window.scrollY + 150) {
+      toggleTheme();
+      setMood('excited');
+      soundFx.playCoin();
+      return;
+    }
+    
     let avgVx = 0, avgVy = 0;
     if (velocities.current.length > 0) {
       avgVx = velocities.current.reduce((s, v) => s + v.vx, 0) / velocities.current.length;
@@ -570,6 +614,17 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
             {mood === 'sitting' && 'Lagi istirahat bentar...'}
             {mood === 'waving' && 'Halo halo! Sini main! 👋'}
             {mood === 'charging' && 'Mengisi daya... ⚡'}
+          </div>
+          
+          {/* ── PET MODE TOGGLE ── */}
+          <div className="absolute top-24 left-1/2 transform translate-x-14 z-20">
+            <button 
+              onClick={(e) => { e.stopPropagation(); setIsPetMode(!isPetMode); }} 
+              className={`p-2 rounded-full backdrop-blur border shadow-md transition-all duration-300 ${isPetMode ? 'bg-amber-400 text-slate-900 border-amber-300 scale-110' : 'bg-white/50 text-slate-600 border-white/50 hover:bg-white/80 scale-100'}`}
+              title={isPetMode ? "Matikan Mode Pet (Laser)" : "Aktifkan Mode Pet (Laser)"}
+            >
+              🐾
+            </button>
           </div>
 
           {/* ── 3D MODEL CANVAS ── */}
