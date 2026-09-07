@@ -537,38 +537,6 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
 
   return (
     <>
-      {/* ── CHARGING STATION (HOME BASE) ── */}
-      <div 
-        id="home-base-container"
-        className="fixed z-40 pointer-events-none"
-        style={{ left: 20, top: homeBasePos.y - 10 }}
-      >
-        <div className="w-36 h-40 relative flex items-end justify-center pb-2 drop-shadow-[0_0_15px_rgba(56,189,248,0.4)]">
-          {/* Futuristic SVG Doghouse Background */}
-          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 144 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="72,10 134,56 134,150 10,150 10,56" fill="#0f172a" stroke="#38bdf8" strokeWidth="2.5" strokeLinejoin="round" />
-            <polygon points="72,16 128,58 128,144 16,144 16,58" fill="#1e293b" />
-          </svg>
-          
-          {/* Holographic Tech Grid */}
-          <div 
-            className="absolute inset-0 opacity-20" 
-            style={{ 
-              clipPath: 'polygon(50% 10%, 93% 36%, 93% 94%, 7% 94%, 7% 36%)', 
-              background: 'linear-gradient(rgba(56,189,248,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(56,189,248,0.5) 1px, transparent 1px)', 
-              backgroundSize: '12px 12px' 
-            }}
-          ></div>
-
-          {/* Neon Door / Portal */}
-          <div className="w-14 h-16 bg-slate-950 border-t-2 border-l-2 border-r-2 border-sky-400 rounded-t-[24px] relative z-10 shadow-[0_0_15px_rgba(56,189,248,0.6)_inset] flex flex-col items-center justify-center">
-            {/* Sci-fi scanner light */}
-            <div className="w-6 h-1 bg-sky-300 rounded-full shadow-[0_0_8px_rgba(56,189,248,1)] mb-3"></div>
-            {/* Glowing Core */}
-            <div className="w-2.5 h-2.5 bg-sky-200 rounded-full animate-pulse-glow shadow-[0_0_10px_rgba(255,255,255,1)]"></div>
-          </div>
-        </div>
-      </div>
 
       <div 
         id="mascot-container"
