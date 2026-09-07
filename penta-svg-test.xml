@@ -1,0 +1,176 @@
+            <svg
+              width="100%"
+              height="100%"
+              viewBox="0 0 200 240"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ filter: isDragging ? 'drop-shadow(0px 25px 35px rgba(15,23,42,0.25))' : 'drop-shadow(0px 15px 25px rgba(15,23,42,0.12))' }}
+            >
+              <defs>
+                {/* Lighter, softer gradients for a premium 3D look */}
+                <radialGradient id="gradBody" cx="35%" cy="30%" r="75%">
+                  <stop offset="0%" stopColor="#ffffff"/>
+                  <stop offset="60%" stopColor="#fdfdfe"/>
+                  <stop offset="85%" stopColor="#f1f5f9"/>
+                  <stop offset="100%" stopColor="#cbd5e1"/>
+                </radialGradient>
+                <radialGradient id="gradHead" cx="30%" cy="20%" r="80%">
+                  <stop offset="0%" stopColor="#ffffff"/>
+                  <stop offset="55%" stopColor="#ffffff"/>
+                  <stop offset="80%" stopColor="#f8fafc"/>
+                  <stop offset="95%" stopColor="#e2e8f0"/>
+                  <stop offset="100%" stopColor="#cbd5e1"/>
+                </radialGradient>
+                <radialGradient id="gradShadow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="rgba(15,23,42,0.15)" />
+                  <stop offset="100%" stopColor="rgba(15,23,42,0)" />
+                </radialGradient>
+                <filter id="blushBlur">
+                  <feGaussianBlur stdDeviation="3" />
+                </filter>
+                <filter id="shadowBlur">
+                  <feGaussianBlur stdDeviation="4" />
+                </filter>
+              </defs>
+
+              {/* Ground Shadow */}
+              <ellipse cx="100" cy="220" rx="45" ry="8" fill="url(#gradShadow)" filter="url(#shadowBlur)" />
+
+              {/* ── LEGS (tiny stubs) ── */}
+              <g
+                className={isDragging || isPaused ? '' : 'animate-bounce'}
+                style={{ animationDuration: isRunning ? '0.15s' : mood === 'angry' ? '0.2s' : '0.4s' }}
+              >
+                {/* Left leg */}
+                <rect x="72" y="180" width="20" height="32" rx="10" fill="url(#gradBody)" />
+                {/* Right leg */}
+                <rect x="108" y="180" width="20" height="32" rx="10" fill="url(#gradBody)" />
+              </g>
+
+              {/* ── ARMS (tiny stubs) ── */}
+              <g className="arms">
+                {/* Left Arm */}
+                <rect 
+                  x="48" y="145" width="18" height="36" rx="9" fill="url(#gradBody)" 
+                  style={{ transform: isHovered ? 'rotate(120deg)' : 'rotate(35deg)', transformOrigin: '57px 154px', transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }} 
+                />
+                {/* Right Arm */}
+                <rect 
+                  x="134" y="145" width="18" height="36" rx="9" fill="url(#gradBody)" 
+                  style={{ transform: 'rotate(-35deg)', transformOrigin: '143px 154px' }} 
+                />
+              </g>
+
+              {/* ── BODY (small capsule) ── */}
+              <rect x="62" y="135" width="76" height="60" rx="30" fill="url(#gradBody)" />
+              
+              {/* Neck Shadow (ambient occlusion under head) */}
+              <path d="M 66 150 Q 100 170 134 150 L 134 140 L 66 140 Z" fill="rgba(15,23,42,0.05)" filter="url(#shadowBlur)" />
+
+              {/* ── HEAD (Oversized, lots of forehead) ── */}
+              <g className="head" style={{ transform: isHovered ? 'translateY(-2px)' : 'none', transition: 'transform 0.3s ease' }}>
+                <ellipse cx="100" cy="95" rx="88" ry="72" fill="url(#gradHead)" />
+                
+                {/* ── FACE (Clustered in the lower half of the head) ── */}
+                {/* HAPPY / DEFAULT */}
+                {mood === 'happy' && (
+                  <g>
+                    <ellipse cx="68" cy="116" rx="14" ry="8" fill="#fda4af" opacity="0.85" filter="url(#blushBlur)" />
+                    <ellipse cx="132" cy="116" rx="14" ry="8" fill="#fda4af" opacity="0.85" filter="url(#blushBlur)" />
+                    <circle cx={82 + eyeOffset.dx} cy={112 + eyeOffset.dy} r="5.5" fill="#0f172a" />
+                    <circle cx={118 + eyeOffset.dx} cy={112 + eyeOffset.dy} r="5.5" fill="#0f172a" />
+                    <path d="M 93 118 Q 100 125 107 118" stroke="#0f172a" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+                  </g>
+                )}
+
+                {/* EXCITED / SURPRISED */}
+                {mood === 'surprised' && (
+                  <g>
+                    <ellipse cx="68" cy="116" rx="14" ry="8" fill="#fda4af" opacity="0.9" filter="url(#blushBlur)" />
+                    <ellipse cx="132" cy="116" rx="14" ry="8" fill="#fda4af" opacity="0.9" filter="url(#blushBlur)" />
+                    <circle cx="82" cy="110" r="6.5" fill="#0f172a" />
+                    <circle cx="118" cy="110" r="6.5" fill="#0f172a" />
+                    <ellipse cx="100" cy="122" rx="4" ry="6" fill="#0f172a" />
+                    {/* Red ! */}
+                    <path d="M 145 40 L 140 60 L 150 60 Z" fill="#ef4444" className="animate-bounce" />
+                    <circle cx="145" cy="70" r="4" fill="#ef4444" className="animate-bounce" />
+                  </g>
+                )}
+
+                {/* ANGRY */}
+                {mood === 'angry' && (
+                  <g>
+                    <ellipse cx="68" cy="116" rx="14" ry="8" fill="#fca5a5" opacity="0.95" filter="url(#blushBlur)" />
+                    <ellipse cx="132" cy="116" rx="14" ry="8" fill="#fca5a5" opacity="0.95" filter="url(#blushBlur)" />
+                    <path d="M 76 114 Q 82 108 86 114" stroke="#0f172a" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+                    <path d="M 124 114 Q 118 108 114 114" stroke="#0f172a" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+                    <path d="M 93 124 Q 100 118 107 124" stroke="#0f172a" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+                    {/* Red Vein */}
+                    <path d="M 145 50 L 152 57 L 145 64 M 152 57 L 160 50" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                  </g>
+                )}
+
+                {/* DIZZY */}
+                {mood === 'dizzy' && (
+                  <g>
+                    <ellipse cx="68" cy="116" rx="14" ry="8" fill="#fda4af" opacity="0.7" filter="url(#blushBlur)" />
+                    <ellipse cx="132" cy="116" rx="14" ry="8" fill="#fda4af" opacity="0.7" filter="url(#blushBlur)" />
+                    <path d="M 82 112 m -5 0 a 5 5 0 1 0 10 0 a 2.5 2.5 0 1 0 -5 0" stroke="#0f172a" strokeWidth="3" fill="none" />
+                    <path d="M 118 112 m -5 0 a 5 5 0 1 0 10 0 a 2.5 2.5 0 1 0 -5 0" stroke="#0f172a" strokeWidth="3" fill="none" />
+                    <path d="M 94 122 Q 100 118 106 122" stroke="#0f172a" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+                  </g>
+                )}
+
+                {/* SAD */}
+                {mood === 'sad' && (
+                  <g>
+                    <ellipse cx="68" cy="118" rx="14" ry="8" fill="#93c5fd" opacity="0.7" filter="url(#blushBlur)" />
+                    <ellipse cx="132" cy="118" rx="14" ry="8" fill="#93c5fd" opacity="0.7" filter="url(#blushBlur)" />
+                    <path d="M 76 112 Q 82 108 86 116" stroke="#0f172a" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+                    <path d="M 124 112 Q 118 108 114 116" stroke="#0f172a" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+                    <path d="M 94 124 Q 100 118 106 124" stroke="#0f172a" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+                    <path d="M 82 120 Q 84 126 82 126 Q 80 126 82 120" fill="#60a5fa" />
+                  </g>
+                )}
+
+                {/* LOVE */}
+                {mood === 'love' && (
+                  <g>
+                    <ellipse cx="68" cy="116" rx="16" ry="10" fill="#fda4af" opacity="0.95" filter="url(#blushBlur)" />
+                    <ellipse cx="132" cy="116" rx="16" ry="10" fill="#fda4af" opacity="0.95" filter="url(#blushBlur)" />
+                    {/* Happy eyes ^ ^ */}
+                    <path d="M 76 114 Q 82 106 88 114" stroke="#0f172a" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+                    <path d="M 112 114 Q 118 106 124 114" stroke="#0f172a" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+                    <path d="M 92 118 Q 100 128 108 118" stroke="#0f172a" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+                    {/* Hearts */}
+                    <text x="135" y="60" fontSize="18" fill="#f43f5e" className="animate-bounce" style={{ animationDuration: '0.8s' }}>♥</text>
+                    <text x="45" y="70" fontSize="14" fill="#fb7185" className="animate-bounce" style={{ animationDuration: '1.1s' }}>♥</text>
+                  </g>
+                )}
+
+                {/* SLEEPY & CHARGING */}
+                {(mood === 'sleepy' || mood === 'charging') && (
+                  <g>
+                    <ellipse cx="68" cy="116" rx="14" ry="8" fill="#fda4af" opacity="0.5" filter="url(#blushBlur)" />
+                    <ellipse cx="132" cy="116" rx="14" ry="8" fill="#fda4af" opacity="0.5" filter="url(#blushBlur)" />
+                    {/* Closed eyes _ _ */}
+                    <path d="M 76 112 L 88 112" stroke="#0f172a" strokeWidth="4.5" strokeLinecap="round" />
+                    <path d="M 112 112 L 124 112" stroke="#0f172a" strokeWidth="4.5" strokeLinecap="round" />
+                    <path d="M 96 122 Q 100 124 104 122" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" fill="none" />
+                    
+                    {mood === 'sleepy' && (
+                      <g className="animate-pulse">
+                        <text x="145" y="65" fontSize="16" fontWeight="bold" fill="#94a3b8">Z</text>
+                        <text x="158" y="52" fontSize="12" fontWeight="bold" fill="#94a3b8">z</text>
+                      </g>
+                    )}
+                    {mood === 'charging' && (
+                      <g className="animate-pulse">
+                        <path d="M 145 40 L 138 55 L 148 55 L 142 70 L 158 50 L 148 50 Z" fill="#fbbf24" />
+                      </g>
+                    )}
+                  </g>
+                )}
+              </g>
+              <ellipse cx="100" cy="135" rx="35" ry="30" fill="transparent" onClick={handleBellyClick} className="cursor-pointer" />
+            </svg>

@@ -338,8 +338,10 @@ export function App() {
         onSelectProject={(proj) => setSelectedProject(proj)}
       />
 
-      {/* Global Fixed Floating Pet Mascot Awans */}
-      <ArcadeMascot onScrollToArcade={handleOpenArcadeFullscreen} />
+      {/* Global Fixed Floating Pet Mascot Awans (Only in Landing) */}
+      {viewMode !== 'arcade' && (
+        <ArcadeMascot onScrollToArcade={handleOpenArcadeFullscreen} />
+      )}
 
     </div>
   );

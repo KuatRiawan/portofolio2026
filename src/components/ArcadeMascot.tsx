@@ -1,1043 +1,627 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Sparkles, X, Heart, RotateCw, CloudRain, AlertCircle, Moon, Flame, Send, 
-  MessageSquare, FileText, Home 
-} from 'lucide-react';
 import { soundFx } from '../services/soundEffects';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { useGLTF, ContactShadows, useAnimations } from '@react-three/drei';
+import * as THREE from 'three';
 
 interface ArcadeMascotProps {
   onScrollToArcade?: () => void;
 }
 
-type MascotMood = 'happy' | 'angry' | 'dizzy' | 'sad' | 'surprised' | 'love' | 'sleepy' | 'charging';
+export type MascotMood = 'happy' | 'angry' | 'dizzy' | 'sad' | 'surprised' | 'love' | 'sleepy' | 'charging' | 'excited' | 'thinking' | 'shy' | 'sitting' | 'waving' | 'peeking';
 
-export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
-  // Kiko the Digital Companion Fox Position
-  const [pos, setPos] = useState<{ x: number; y: number }>(() => ({
-    x: typeof window !== 'undefined' ? Math.max(20, window.innerWidth - 140) : 220,
-    y: typeof window !== 'undefined' ? Math.max(20, window.innerHeight - 160) : 400,
-  }));
-  const [direction, setDirection] = useState<'right' | 'left'>('left');
-  const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [isJumping, setIsJumping] = useState<boolean>(false);
-  const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [isHovered, setIsHovered] = useState<boolean>(false);
-  const [isCharging, setIsCharging] = useState<boolean>(false);
-  const [battery, setBattery] = useState<number>(90);
-  
-  // Pause-on-click state
-  const [isPaused, setIsPaused] = useState<boolean>(false);
-  const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+// The 3D Model Component inside the Canvas
+function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeOffset }: { 
+  mood: MascotMood; 
+  isDragging: boolean;
+  isFalling: boolean;
+  isWalking: boolean;
+  facingRight: boolean;
+  eyeOffset: { dx: number, dy: number };
+}) {
+  const group = useRef<THREE.Group>(null);
+  const { scene, animations } = useGLTF('/Karakter/kai_-_the_little_fox_warrior_animated.glb') as any;
+  const { actions } = useAnimations(animations, group);
 
-  // Emotional Mood Engine
-  const [mood, setMood] = useState<MascotMood>('happy');
-  
-  const [speechBubble, setSpeechBubble] = useState<string>('Yo! Gue Kiko, teman digital Kuat Riawan! Portfolio-nya mau dijelajahin bareng?');
-  const [showSpeech, setShowSpeech] = useState<boolean>(true);
-  const [chatInput, setChatInput] = useState<string>('');
-  const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
-  const [isContextMenuOpen, setIsContextMenuOpen] = useState<boolean>(false);
-
-  // Tail Click Easter Egg Counter
-  const [tailClicks, setTailClicks] = useState<number>(0);
-
-  // Cursor & Pupil Tracking
-  const [eyeOffset, setEyeOffset] = useState<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
-
-  // Section Tracking State
-  const [currentSection, setCurrentSection] = useState<string>('hero');
-
-  const dragRef = useRef<{ startX: number; startY: number; initialPosX: number; initialPosY: number }>({
-    startX: 0,
-    startY: 0,
-    initialPosX: 220,
-    initialPosY: 400,
-  });
-
-  const isPointerDownRef = useRef<boolean>(false);
-  const hasMovedRef = useRef<boolean>(false);
-
-  // Physics & Scroll Velocity
-  const lastPointerRef = useRef<{ x: number; y: number; time: number }>({ x: 0, y: 0, time: 0 });
-  const velocityRef = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
-  const shakeCountRef = useRef<number>(0);
-  const lastDirectionRef = useRef<'left' | 'right' | null>(null);
-
-  const moodResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastScrollYRef = useRef<number>(0);
-
-  // Kiko Personality Banter Quotes (Strictly Zero Emojis)
-  const personalityQuotes = [
-    'Lu ngapain dah? Tanya Kiko aja di tombol chat!',
-    'Project NURAGA AI Platform K3 karya paling keren Kuat Riawan!',
-    'Jangan cuma liat-liat, yuk kontak Kuat Riawan!',
-    'Skill Kuat lengkap: React, TypeScript, Python, Node.js & BigQuery AI!',
-    'CV Kuat Riawan ada di tombol atas, yuk download!',
-    'Kiko bisa nemenin kamu jalan-jalan di semua section portofolio!',
-    'Beasiswa Dicoding 2026 Distinction & S1 Sistem Informasi UT!'
-  ];
-
-  // First Entrance Animation & Greeting
   useEffect(() => {
-    const introTimer = setTimeout(() => {
-      setSpeechBubble('Yo! Gue Kiko, teman digital Kuat Riawan!');
-      setShowSpeech(true);
-      setTimeout(() => {
-        setSpeechBubble('Portfolio-nya mau dijelajahin bareng?');
-      }, 3500);
-    }, 1000);
-    return () => clearTimeout(introTimer);
-  }, []);
+    if (!actions) return;
+    
+    const actionNames = Object.keys(actions);
+    if (actionNames.length === 0) return;
 
-  // Battery Drain & Charging Loop
-  useEffect(() => {
-    const batInterval = setInterval(() => {
-      setBattery((prev) => {
-        if (isCharging) {
-          const next = Math.min(100, prev + 5);
-          if (next === 100 && mood === 'charging') {
-            setMood('happy');
-            setIsCharging(false);
-            setSpeechBubble('Batrai Kiko sudah 100% penuh! Siap keliling lagi!');
-            setShowSpeech(true);
-          }
-          return next;
-        }
-        const next = Math.max(5, prev - 1);
-        if (next < 15 && mood === 'happy') {
-          setSpeechBubble('Batrai Kiko sisa ' + next + '% nih! Klik KIKO HOME untuk ngecas!');
-          setShowSpeech(true);
-        }
-        return next;
-      });
-    }, 12000);
-    return () => clearInterval(batInterval);
-  }, [isCharging, mood]);
+    console.log('Available animations for Kai:', actionNames);
 
-  // Cursor Tracking Loop (Kiko nengok kursor & flee if fast)
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const mascotCenterX = pos.x + 45;
-      const mascotCenterY = pos.y + 50;
-      const angle = Math.atan2(e.clientY - mascotCenterY, e.clientX - mascotCenterX);
-      const dist = Math.hypot(e.clientX - mascotCenterX, e.clientY - mascotCenterY);
+    // Stop all current actions
+    actionNames.forEach(name => actions[name]?.stop());
 
-      if (dist < 350) {
-        const offsetDist = Math.min(dist / 60, 4);
-        setEyeOffset({
-          dx: Math.cos(angle) * offsetDist,
-          dy: Math.sin(angle) * offsetDist,
-        });
-      } else {
-        setEyeOffset({ dx: 0, dy: 0 });
-      }
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [pos]);
-
-  // Scroll Velocity & Section Detection Loop
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentY = window.scrollY;
-      const diff = Math.abs(currentY - lastScrollYRef.current);
-      lastScrollYRef.current = currentY;
-
-      if (diff > 35 && !isRunning && !isDragging) {
-        setIsRunning(true);
-        setSpeechBubble('Buset, santai dikit! Kiko lari!');
-        setShowSpeech(true);
-      }
-
-      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-      scrollTimeoutRef.current = setTimeout(() => {
-        if (isRunning) {
-          setIsRunning(false);
-          setSpeechBubble('Buset, santai dikit.');
-          setShowSpeech(true);
-        }
-      }, 400);
-
-      // Section Awareness Check
-      const sections = ['hero', 'experience', 'education', 'skills', 'certificates', 'projects', 'contact'];
-      for (const sec of sections) {
-        const el = document.getElementById(sec);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top <= window.innerHeight * 0.5 && rect.bottom >= window.innerHeight * 0.2) {
-            if (currentSection !== sec) {
-              setCurrentSection(sec);
-              triggerSectionComment(sec);
-            }
-            break;
-          }
-        }
-      }
-
-      // Footer Check
-      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 50) {
-        if (currentSection !== 'footer') {
-          setCurrentSection('footer');
-          setMood('love');
-          setSpeechBubble('Sudah di paling bawah nih! Yuk kontak Kuat Riawan!');
-          setShowSpeech(true);
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [isRunning, isDragging, currentSection]);
-
-  const triggerSectionComment = (section: string) => {
-    triggerPause();
-    if (section === 'hero') {
-      setMood('happy');
-      setSpeechBubble('Ini orangnya btw. Gue bisa ceritain tentang Kuat kalau mau.');
-    } else if (section === 'experience') {
-      setMood('happy');
-      setSpeechBubble('Yang ini pengalaman kerjanya di PT Upaya Riksa Patra!');
-    } else if (section === 'education') {
-      setMood('sleepy');
-      setSpeechBubble('Kuat kuliah S1 Sistem Informasi & Beasiswa Dicoding 2026 Distinction!');
-    } else if (section === 'skills') {
-      setMood('love');
-      setSpeechBubble('Yang ini sering dipake: React, TypeScript, Python & BigQuery!');
-    } else if (section === 'certificates') {
-      setMood('surprised');
-      setSpeechBubble('Bukti bukan bacot. Sertifikat Beasiswa Dicoding 2026 Distinction Kuat 100% Valid!');
-    } else if (section === 'projects') {
-      setMood('happy');
-      setSpeechBubble('Lumayan nih project-nya! NURAGA AI Platform K3 karya favorit Kuat!');
-    } else if (section === 'contact') {
-      setMood('love');
-      setSpeechBubble('Yuk kirim pesan atau email ke Kuat Riawan!');
-    }
-    setShowSpeech(true);
-  };
-
-  // AI Query Processor
-  const processQuery = (queryText: string) => {
-    soundFx.playGrabPulse();
-    setIsJumping(true);
-    setTimeout(() => setIsJumping(false), 500);
-    triggerPause();
-
-    const msg = queryText.toLowerCase().trim();
-    setChatInput('');
-    setIsChatOpen(false);
-
-    let reply = '';
-    if (msg.includes('proyek') || msg.includes('project') || msg.includes('karya') || msg.includes('nuraga')) {
-      setMood('happy');
-      reply = 'Project utama Kuat Riawan adalah NURAGA AI Platform K3 dengan WA Gateway & Analytics!';
-    } else if (msg.includes('skill') || msg.includes('kemampuan') || msg.includes('bisa') || msg.includes('bahasa')) {
-      setMood('love');
-      reply = 'Kuat Riawan menguasai React, Node.js, TypeScript, Python, BigQuery & Otomasi AI!';
-    } else if (msg.includes('kontak') || msg.includes('email') || msg.includes('wa') || msg.includes('hubungi')) {
-      setMood('happy');
-      reply = 'Kontak Kuat Riawan: kuatriawan69@gmail.com | WA: +62 821-2428-9987!';
-    } else if (msg.includes('dicoding') || msg.includes('kuliah') || msg.includes('pendidikan') || msg.includes('ut')) {
-      setMood('happy');
-      reply = 'Kuat Riawan lulus Beasiswa Dicoding 2026 Distinction & S1 Sistem Informasi Terbuka!';
-    } else if (msg.includes('siapa') || msg.includes('nama') || msg.includes('kiko') || msg.includes('kenalin')) {
-      setMood('love');
-      reply = 'Gue Kiko, rubah digital pendamping portofolio Kuat Riawan! Salam kenal ya!';
-    } else if (msg.includes('cv') || msg.includes('resume') || msg.includes('download')) {
-      setMood('happy');
-      reply = 'CV Kuat Riawan bisa langsung diunduh dari tombol Resume / CV di navbar!';
-    } else if (msg.includes('marah') || msg.includes('kesel') || msg.includes('jahat')) {
-      setMood('sad');
-      reply = 'Jangan galak-galak dong, Kiko kan baik hati...';
-    } else if (msg.includes('lucu') || msg.includes('keren') || msg.includes('hebat') || msg.includes('suka')) {
-      setMood('love');
-      reply = 'Makasih banyak ya! Kiko makin betah sama kamu!';
-    } else {
-      setMood('happy');
-      reply = `Kiko paham! "${msg}" -> Kuat Riawan siap diajak berkembang & kerja sebagai Web Dev!`;
+    // Decide which one to play based on exact known names from Kai
+    let targetAction = 'Idle';
+    if (isWalking) {
+      targetAction = 'Run';
+    } else if (mood === 'waving' || mood === 'happy' || mood === 'excited') {
+      targetAction = 'Hello'; // Great for greeting the user
+    } else if (mood === 'charging' || mood === 'sleepy') {
+      targetAction = 'Pray'; // Best fit for stationary rest/focus
+    } else if (mood === 'dizzy') {
+      targetAction = 'T-Pose'; // Funny static pose when dizzy
     }
 
-    setSpeechBubble(reply);
-    setShowSpeech(true);
-  };
+    // Fallback if the animation doesn't exist (e.g., if a different character is loaded later)
+    if (!actions[targetAction]) {
+      targetAction = actionNames[0];
+    }
 
-  const handleChatSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!chatInput.trim()) return;
-    processQuery(chatInput);
-  };
-
-  const triggerPause = () => {
-    setIsPaused(true);
-    if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current);
-    pauseTimerRef.current = setTimeout(() => {
-      setIsPaused(false);
-    }, 5000);
-  };
-
-  // Active Walking & Wandering Loop
-  useEffect(() => {
-    if (isDragging || isPaused || isCharging || mood === 'sleepy') return;
-
-    const walkSpeed = isRunning ? 2.5 : mood === 'angry' ? 1.4 : mood === 'dizzy' ? 0.3 : 0.45;
-    const intervalTime = isRunning ? 25 : mood === 'angry' ? 40 : mood === 'dizzy' ? 120 : 90;
-
-    const interval = setInterval(() => {
-      setPos((prevPos) => {
-        let newX = prevPos.x;
-        const maxWalkX = Math.max(50, (typeof window !== 'undefined' ? window.innerWidth : 400) - 110);
-
-        if (direction === 'left') {
-          newX -= walkSpeed * 3;
-          if (newX <= 15) {
-            newX = 15;
-            setDirection('right');
-          }
-        } else {
-          newX += walkSpeed * 3;
-          if (newX >= maxWalkX) {
-            newX = maxWalkX;
-            setDirection('left');
-          }
-        }
-
-        return { x: newX, y: prevPos.y };
-      });
-    }, intervalTime);
-
-    return () => clearInterval(interval);
-  }, [direction, isDragging, isPaused, isCharging, mood, isRunning]);
-
-  // Periodic Random Banter
-  useEffect(() => {
-    if (isDragging || isPaused || isCharging || mood === 'angry' || mood === 'dizzy' || mood === 'sad') return;
-
-    const speechTimer = setInterval(() => {
-      if (mood === 'happy') {
-        const q = personalityQuotes[Math.floor(Math.random() * personalityQuotes.length)];
-        setSpeechBubble(q);
-        setShowSpeech(true);
-
-        setTimeout(() => {
-          setShowSpeech(false);
-        }, 4500);
-      }
-    }, 12000);
-
-    return () => clearInterval(speechTimer);
-  }, [isDragging, isPaused, isCharging, mood]);
-
-  // Long Idle Check (Lu ngapain dah?)
-  useEffect(() => {
-    const idleTimer = setTimeout(() => {
-      if (!isDragging && !isPaused && !isCharging && mood === 'happy') {
-        setMood('sleepy');
-        setSpeechBubble('Lu ngapain dah? Kiko tidur dulu ya...');
-        setShowSpeech(true);
-      }
-    }, 18000);
-
-    return () => clearTimeout(idleTimer);
-  }, [mood, isDragging, isPaused, isCharging]);
-
-  // Drag & Pointer Handlers
-  const startPointer = (clientX: number, clientY: number) => {
-    isPointerDownRef.current = true;
-    hasMovedRef.current = false;
-    shakeCountRef.current = 0;
-    lastDirectionRef.current = null;
-    velocityRef.current = { vx: 0, vy: 0 };
-    lastPointerRef.current = { x: clientX, y: clientY, time: Date.now() };
-
-    dragRef.current = {
-      startX: clientX,
-      startY: clientY,
-      initialPosX: pos.x,
-      initialPosY: pos.y,
-    };
-  };
-
-  useEffect(() => {
-    const handlePointerMove = (clientX: number, clientY: number) => {
-      if (!isPointerDownRef.current) return;
-      const now = Date.now();
-      const dt = Math.max(now - lastPointerRef.current.time, 10);
-
-      const dx = clientX - dragRef.current.startX;
-      const dy = clientY - dragRef.current.startY;
-      const dist = Math.hypot(dx, dy);
-
-      if (dist > 5 && !isDragging) {
-        setIsDragging(true);
-        hasMovedRef.current = true;
-        soundFx.playGrabPulse();
-        setMood('surprised');
-        setSpeechBubble('Waaaa! Kiko terbang diangkat!');
-        setShowSpeech(true);
-      }
-
-      if (isDragging) {
-        const moveDx = clientX - lastPointerRef.current.x;
-        const moveDy = clientY - lastPointerRef.current.y;
-        velocityRef.current = { vx: moveDx / dt, vy: moveDy / dt };
-
-        if (Math.abs(moveDx) > 8) {
-          const currentDir = moveDx > 0 ? 'right' : 'left';
-          if (lastDirectionRef.current && lastDirectionRef.current !== currentDir) {
-            shakeCountRef.current += 1;
-            if (shakeCountRef.current >= 3) {
-              setMood('dizzy');
-              setSpeechBubble('Waduh... Kiko dikocok-kocok pusing banget!');
-              setShowSpeech(true);
-            }
-          }
-          lastDirectionRef.current = currentDir;
-        }
-
-        const clampedX = Math.max(10, Math.min((window.innerWidth || 400) - 95, dragRef.current.initialPosX + dx));
-        const clampedY = Math.max(10, Math.min((window.innerHeight || 600) - 105, dragRef.current.initialPosY + dy));
-        setPos({ x: clampedX, y: clampedY });
-      }
-
-      lastPointerRef.current = { x: clientX, y: clientY, time: now };
-    };
-
-    const handlePointerUp = () => {
-      if (!isPointerDownRef.current) return;
-      isPointerDownRef.current = false;
-
-      if (hasMovedRef.current || isDragging) {
-        setIsDragging(false);
-        setIsJumping(true);
-        setTimeout(() => setIsJumping(false), 500);
-
-        triggerPause();
-
-        const throwSpeed = Math.hypot(velocityRef.current.vx, velocityRef.current.vy);
-        const wasShaken = shakeCountRef.current >= 3;
-
-        shakeCountRef.current = 0;
-        lastDirectionRef.current = null;
-
-        if (wasShaken) {
-          setMood('dizzy');
-          setSpeechBubble('Aduh... Kiko pusing akibat dikocok-kocok!');
-          setShowSpeech(true);
-        } else if (throwSpeed > 0.6) {
-          setMood('angry');
-          setSpeechBubble('WOI! Jangan dilempar-lempar dong!');
-          setShowSpeech(true);
-        } else {
-          setMood('love');
-          setSpeechBubble('Hehe, terima kasih sudah mindahin Kiko dengan lembut!');
-          setShowSpeech(true);
-        }
-
-        if (moodResetTimerRef.current) clearTimeout(moodResetTimerRef.current);
-        moodResetTimerRef.current = setTimeout(() => {
-          setMood('happy');
-        }, 3500);
-      } else {
-        triggerMascotClick();
-      }
-    };
-
-    const onMouseMove = (e: MouseEvent) => handlePointerMove(e.clientX, e.clientY);
-    const onMouseUp = () => handlePointerUp();
-    const onTouchMove = (e: TouchEvent) => {
-      if (e.touches.length > 0) {
-        handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
-      }
-    };
-    const onTouchEnd = () => handlePointerUp();
-
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-    window.addEventListener('touchmove', onTouchMove);
-    window.addEventListener('touchend', onTouchEnd);
+    if (targetAction && actions[targetAction]) {
+      actions[targetAction].reset().fadeIn(0.2).play();
+    }
 
     return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('touchend', onTouchEnd);
+      if (targetAction && actions[targetAction]) {
+        actions[targetAction].fadeOut(0.2);
+      }
     };
-  }, [isDragging, pos]);
+  }, [actions, isWalking, mood]);
 
-  // Single Click Event
-  const triggerMascotClick = () => {
-    soundFx.playGrabPulse();
-    setIsJumping(true);
-    setTimeout(() => setIsJumping(false), 500);
-    triggerPause();
 
-    if (!isChatOpen) {
-      setSpeechBubble('Ngobrol sama gue?');
-      setShowSpeech(true);
+  useFrame((state, delta) => {
+    if (!group.current) return;
+    
+    // Smooth target rotations
+    const targetRotation = new THREE.Euler(0, 0, 0);
+    const targetPosition = new THREE.Vector3(0, -0.4, 0); // Base position - adjusted to center model better
+    const time = state.clock.getElapsedTime();
+
+    // Base looking direction (eyeOffset gives us dx/dy based on cursor)
+    targetRotation.y = (eyeOffset.dx / 10) * 0.3;
+    targetRotation.x = (eyeOffset.dy / 10) * 0.2;
+
+    if (isDragging) {
+      targetRotation.z = Math.sin(time * 15) * 0.2; // Wiggle when dragged
+      targetRotation.x += 0.2;
+      targetPosition.y = 0; // Lift up slightly
+    } else if (isFalling) {
+      targetRotation.z = time * 10; // Spin while falling!
+    } else if (isWalking) {
+      // Face the direction of walking
+      targetRotation.y += facingRight ? Math.PI / 2 : -Math.PI / 2;
+      // Very strong bobbing and waddling animation so it's obviously moving
+      targetPosition.y = -0.4 + Math.abs(Math.sin(time * 15)) * 0.3;
+      targetRotation.z = Math.sin(time * 15) * 0.4; // Rock side to side strongly
+      targetRotation.x = Math.sin(time * 15) * 0.1; // Lean forward/back
+    } else if (mood === 'sleepy' || mood === 'charging') {
+      targetRotation.x = 0.3; // Nodding off
+      targetPosition.y = -0.6;
+    } else if (mood === 'dizzy') {
+      targetRotation.y = time * 5; // Spin slowly
+    } else if (mood === 'excited' || mood === 'waving') {
+      targetPosition.y = -0.4 + Math.abs(Math.sin(time * 15)) * 0.2;
+    } else if (mood === 'peeking') {
+      targetRotation.y = facingRight ? Math.PI / 2 : -Math.PI / 2;
     }
-  };
+    
+    // Smooth damp towards target
+    group.current.rotation.x = THREE.MathUtils.damp(group.current.rotation.x, targetRotation.x, 5, delta);
+    group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, targetRotation.y, 5, delta);
+    group.current.rotation.z = THREE.MathUtils.damp(group.current.rotation.z, targetRotation.z, 5, delta);
+    
+    group.current.position.x = THREE.MathUtils.damp(group.current.position.x, targetPosition.x, 5, delta);
+    group.current.position.y = THREE.MathUtils.damp(group.current.position.y, targetPosition.y, 5, delta);
+    group.current.position.z = THREE.MathUtils.damp(group.current.position.z, targetPosition.z, 5, delta);
+    // Removed procedural bone animation to rely on built-in GLB animations
+  });
 
-  // Double Click Event (WOI!)
-  const handleDoubleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    soundFx.playGrabPulse();
-    setIsJumping(true);
-    setMood('angry');
-    setSpeechBubble('WOI!');
-    setShowSpeech(true);
-    triggerPause();
-  };
+  return (
+    <group ref={group} dispose={null}>
+      {/* Adjusted scale so it fits nicely on the screen */}
+      <group rotation={[0, 0, 0]}>
+        <primitive object={scene} scale={2.5} position={[0, -0.2, 0]} />
+      </group>
+    </group>
+  );
+}
 
-  // Right Click Context Menu
-  const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsContextMenuOpen(true);
-  };
+// Preload to avoid jitter
+useGLTF.preload('/Karakter/kai_-_the_little_fox_warrior_animated.glb');
 
-  // Tail Click Easter Egg (5x click -> WOI JANGAN PEGANG EKOR GUE!)
-  const handleTailClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const nextClicks = tailClicks + 1;
-    setTailClicks(nextClicks);
+export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
+  // ─── STATE ───
+  const [mood, setMood] = useState<MascotMood>('happy');
+  const [isHovered, setIsHovered] = useState(false);
+  const [nearbyElementContext, setNearbyElementContext] = useState<string | null>(null);
+  
+  // Position & Movement
+  const [pos, setPos] = useState({ x: -1000, y: -1000 }); 
+  const [targetPos, setTargetPos] = useState<{x: number, y: number} | null>(null);
+  const [facingRight, setFacingRight] = useState(false);
+  const [isWalking, setIsWalking] = useState(false);
+  
+  // Cursor Tracking for Parallax
+  const [eyeOffset, setEyeOffset] = useState({ dx: 0, dy: 0 });
+  
+  // Dragging & Physics
+  const [isDragging, setIsDragging] = useState(false);
+  const [isFalling, setIsFalling] = useState(false);
+  const [isRecovering, setIsRecovering] = useState(false);
+  
+  // ─── REFS ───
+  const mascotRef = useRef<HTMLDivElement>(null);
+  const moodResetTimerRef = useRef<number | null>(null);
+  const idleTimerRef = useRef<number | null>(null);
+  
+  // Drag Physics Tracking
+  const dragStart = useRef({ x: 0, y: 0 });
+  const posStart = useRef({ x: 0, y: 0 });
+  const lastMousePos = useRef({ x: 0, y: 0, time: 0 });
+  const velocities = useRef<{vx: number, vy: number}[]>([]);
+  const shakeCount = useRef(0);
+  
+  const homeBasePos = { x: 40, y: window.innerHeight - 170 };
 
-    if (nextClicks >= 5) {
-      soundFx.playGrabPulse();
-      setTailClicks(0);
-      setMood('angry');
-      setIsRunning(true);
-      setSpeechBubble('WOI JANGAN PEGANG EKOR GUE!');
-      setShowSpeech(true);
-      triggerPause();
-      setTimeout(() => setIsRunning(false), 2000);
-    }
-  };
-
-  // Fly / Walk Home to KIKO HOME
-  const triggerKikoHome = () => {
-    setIsCharging(true);
-    setMood('charging');
-    setIsContextMenuOpen(false);
-    setPos({
-      x: Math.max(10, (window.innerWidth || 400) - 140),
-      y: Math.max(10, (window.innerHeight || 600) - 150),
+  // ─── HELPER: Check Nearby Elements ───
+  const checkNearbyElements = (currentX: number, currentY: number) => {
+    // Only check if not dragging or falling
+    const elements = document.querySelectorAll('a, button, [class*="project"], [class*="card"]');
+    let found = false;
+    
+    // Convert mascot pos to center
+    const mx = currentX + 70;
+    const my = currentY + 80;
+    
+    elements.forEach(el => {
+      if (found) return;
+      const rect = el.getBoundingClientRect();
+      // Expand rect slightly for proximity
+      if (mx > rect.left - 50 && mx < rect.right + 50 && my > rect.top - 50 && my < rect.bottom + 50) {
+        found = true;
+        
+        // Contextual strings
+        const text = el.textContent?.toLowerCase() || '';
+        if (text.includes('github') || text.includes('code')) {
+          setNearbyElementContext("Mau liat kode sumbernya?");
+        } else if (text.includes('demo') || text.includes('main')) {
+          setNearbyElementContext("Ayo kita mainkan ini!");
+        } else {
+          setNearbyElementContext("Mau liat yang ini?");
+        }
+      }
     });
-    setSpeechBubble('Zzz... Kiko istirahat dulu di KIKO HOME...');
-    setShowSpeech(true);
+    
+    if (found) {
+      setMood('thinking');
+    } else {
+      setNearbyElementContext(null);
+      if (mood === 'thinking') setMood('happy');
+    }
   };
+
+  // ─── IDLE AI ───
+  const resetIdleTimer = () => {
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    if (isDragging || isWalking || isFalling || isRecovering) return;
+    
+    idleTimerRef.current = setTimeout(() => {
+      // 50% chance to do a random action, 50% chance to go home and charge
+      if (Math.random() > 0.5) {
+        const actions: MascotMood[] = ['sitting', 'sleepy', 'happy', 'thinking'];
+        const action = actions[Math.floor(Math.random() * actions.length)];
+        setMood(action);
+        
+        if (action === 'happy') {
+          setIsWalking(true);
+          setTimeout(() => setIsWalking(false), 3000);
+        }
+      } else {
+        // GO HOME TO CHARGE
+        setTargetPos({ x: homeBasePos.x, y: homeBasePos.y });
+        setFacingRight(homeBasePos.x > pos.x);
+        setIsWalking(true);
+        setMood('sleepy');
+      }
+    }, 12000);
+  };
+
+  useEffect(() => {
+    // Start at home base
+    setPos({ x: homeBasePos.x, y: homeBasePos.y });
+    setMood('charging');
+    
+    const resizeHandler = () => {
+      homeBasePos.y = window.innerHeight - 170;
+    };
+    window.addEventListener('resize', resizeHandler);
+    
+    resetIdleTimer();
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      window.removeEventListener('resize', resizeHandler);
+    };
+  }, []);
+
+  // ─── Cursor wake-up & Parallax ───
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      resetIdleTimer();
+      if (!mascotRef.current || isDragging || isFalling || isRecovering || isWalking) return;
+      
+      const rect = mascotRef.current.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      const deltaX = e.clientX - centerX;
+      const deltaY = e.clientY - centerY;
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      
+      // Wake up from charging/sleepy if cursor is close
+      if ((mood === 'sleepy' || mood === 'sitting' || mood === 'charging') && distance < 200) {
+        setMood('happy');
+      }
+      
+      // Parallax Eye Offset (subtle fake 3D tracking)
+      const maxOffset = 10;
+      const ex = Math.max(-maxOffset, Math.min(maxOffset, deltaX / 30));
+      const ey = Math.max(-maxOffset, Math.min(maxOffset, deltaY / 30));
+      setEyeOffset({ dx: ex, dy: ey });
+      
+      // Look at direction
+      if (distance > 100 && mood !== 'peeking') {
+        setFacingRight(deltaX > 0);
+      }
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [isDragging, isFalling, isRecovering, isWalking, mood, facingRight]);
+
+  // ─── Click-to-Walk ───
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      resetIdleTimer();
+      const target = e.target as HTMLElement;
+      if (target.closest('button') || target.closest('a') || target.closest('#mascot-container') || target.closest('#home-base-container')) {
+        return;
+      }
+      
+      if (isDragging || isFalling) return;
+      
+      const tx = e.clientX - 100; 
+      const ty = e.clientY - 120; 
+      
+      setTargetPos({ x: tx, y: ty });
+      setFacingRight(tx > pos.x);
+      setIsWalking(true);
+      setMood('happy');
+      setNearbyElementContext(null); // Clear context while walking
+      soundFx.playMoveWhirr();
+    };
+    
+    window.addEventListener('click', handleGlobalClick);
+    return () => window.removeEventListener('click', handleGlobalClick);
+  }, [pos.x, isDragging, isFalling]);
+
+  // ─── Walking Loop ───
+  useEffect(() => {
+    if (!targetPos || !isWalking) return;
+    
+    let animationFrameId: number;
+    let lastTime = performance.now();
+    
+    const walkStep = (time: number) => {
+      const dt = time - lastTime;
+      lastTime = time;
+      
+      setPos(currentPos => {
+        const dx = targetPos.x - currentPos.x;
+        const dy = targetPos.y - currentPos.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < 5) {
+          setIsWalking(false);
+          setTargetPos(null);
+          
+          // If returned home
+          if (Math.abs(targetPos.x - homeBasePos.x) < 10 && Math.abs(targetPos.y - homeBasePos.y) < 10) {
+            setMood('charging');
+          } else {
+            // Check elements when stopped
+            checkNearbyElements(targetPos.x, targetPos.y);
+          }
+          
+          resetIdleTimer();
+          return targetPos;
+        }
+        
+        const speed = 0.7; // Faster speed to match the "Run" animation
+        const move = speed * dt;
+        
+        const ratio = Math.min(move / distance, 1);
+        return {
+          x: currentPos.x + dx * ratio,
+          y: currentPos.y + dy * ratio
+        };
+      });
+      
+      if (isWalking) {
+        animationFrameId = requestAnimationFrame(walkStep);
+      }
+    };
+    
+    animationFrameId = requestAnimationFrame(walkStep);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [targetPos, isWalking]);
+
+  // ─── DRAG & PHYSICS ───
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    setIsDragging(true);
+    setIsWalking(false);
+    setTargetPos(null);
+    setIsFalling(false);
+    setIsRecovering(false);
+    
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    posStart.current = { ...pos };
+    lastMousePos.current = { x: e.clientX, y: e.clientY, time: performance.now() };
+    velocities.current = [];
+    shakeCount.current = 0;
+    
+    mascotRef.current?.setPointerCapture(e.pointerId);
+    soundFx.playMoveWhirr();
+    setMood('surprised');
+    
+    if (moodResetTimerRef.current) clearTimeout(moodResetTimerRef.current);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    e.stopPropagation();
+    
+    const dx = e.clientX - dragStart.current.x;
+    const dy = e.clientY - dragStart.current.y;
+    
+    const now = performance.now();
+    const dt = now - lastMousePos.current.time;
+    if (dt > 0) {
+      const vx = (e.clientX - lastMousePos.current.x) / dt;
+      const vy = (e.clientY - lastMousePos.current.y) / dt;
+      velocities.current.push({ vx, vy });
+      if (velocities.current.length > 5) velocities.current.shift();
+      
+      if (velocities.current.length >= 3) {
+        const v1 = velocities.current[velocities.current.length - 2].vx;
+        const v2 = velocities.current[velocities.current.length - 1].vx;
+        if (Math.sign(v1) !== Math.sign(v2) && Math.abs(v1) > 1 && Math.abs(v2) > 1) {
+          shakeCount.current++;
+        }
+      }
+      
+      if (shakeCount.current > 4) {
+        setMood('dizzy');
+      }
+    }
+    
+    lastMousePos.current = { x: e.clientX, y: e.clientY, time: now };
+
+    setPos({
+      x: posStart.current.x + dx,
+      y: posStart.current.y + dy
+    });
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    e.stopPropagation();
+    setIsDragging(false);
+    mascotRef.current?.releasePointerCapture(e.pointerId);
+    resetIdleTimer();
+    
+    // Check if dragged to edge for peeking
+    if (pos.x < -10) {
+      setPos(p => ({ ...p, x: -30 }));
+      setMood('peeking');
+      setFacingRight(true);
+      return;
+    } else if (pos.x > window.innerWidth - 110) {
+      setPos(p => ({ ...p, x: window.innerWidth - 110 }));
+      setMood('peeking');
+      setFacingRight(false);
+      return;
+    }
+    
+    // If dropped at home base
+    if (Math.abs(pos.x - homeBasePos.x) < 50 && Math.abs(pos.y - homeBasePos.y) < 50) {
+      setPos({ x: homeBasePos.x, y: homeBasePos.y });
+      setMood('charging');
+      return;
+    }
+    
+    let avgVx = 0, avgVy = 0;
+    if (velocities.current.length > 0) {
+      avgVx = velocities.current.reduce((s, v) => s + v.vx, 0) / velocities.current.length;
+      avgVy = velocities.current.reduce((s, v) => s + v.vy, 0) / velocities.current.length;
+    }
+    
+    const speed = Math.sqrt(avgVx * avgVx + avgVy * avgVy);
+    
+    if (speed > 2.5) {
+      // THROWN!
+      soundFx.playGrabPulse();
+      setMood('angry');
+      setIsFalling(true);
+      
+      const throwDuration = 500;
+      const startX = pos.x;
+      const startY = pos.y;
+      const targetX = Math.max(0, Math.min(window.innerWidth - 100, startX + avgVx * throwDuration));
+      const targetY = window.innerHeight - 150; 
+      
+      let startTime = performance.now();
+      const throwAnim = (time: number) => {
+        const progress = Math.min((time - startTime) / throwDuration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        
+        setPos({
+          x: startX + (targetX - startX) * easeOut,
+          y: startY + (targetY - startY) * Math.min(progress * 1.5, 1) 
+        });
+        
+        if (progress < 1) {
+          requestAnimationFrame(throwAnim);
+        } else {
+          setIsFalling(false);
+          setIsRecovering(true);
+          soundFx.playCoin(); 
+          setTimeout(() => {
+            setIsRecovering(false);
+            setMood('happy');
+            resetIdleTimer();
+          }, 2000);
+        }
+      };
+      requestAnimationFrame(throwAnim);
+      
+    } else {
+      soundFx.playMoveWhirr();
+      if (mood === 'dizzy') {
+        setIsRecovering(true);
+        setTimeout(() => {
+          setIsRecovering(false);
+          setMood('happy');
+        }, 3000);
+      } else {
+        setMood('happy');
+        checkNearbyElements(pos.x, pos.y);
+      }
+    }
+  };
+
+  const clickCount = useRef(0);
+  const handleBellyClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isDragging || isWalking || isFalling) return;
+    
+    clickCount.current++;
+    if (clickCount.current >= 3) {
+      setMood('angry');
+      soundFx.playGrabPulse();
+      setTimeout(() => clickCount.current = 0, 3000);
+    } else {
+      setMood('excited');
+      soundFx.playCoin();
+    }
+    
+    if (moodResetTimerRef.current) clearTimeout(moodResetTimerRef.current);
+    moodResetTimerRef.current = setTimeout(() => {
+      setMood('happy');
+      resetIdleTimer();
+    }, 2000);
+  };
+  
+  const handleMouseEnter = () => {
+    if (isDragging || isWalking || isFalling || isRecovering || mood === 'peeking') return;
+    setIsHovered(true);
+    if (mood === 'happy' || mood === 'sitting' || mood === 'sleepy' || mood === 'charging') {
+      setMood('waving');
+    }
+  };
+  
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    if (mood === 'waving') {
+      setMood('happy');
+      resetIdleTimer();
+    }
+  };
+
+  if (pos.x === -1000) return null;
+
+  const isPeeking = mood === 'peeking';
 
   return (
     <>
-      {/* Floating KIKO HOME Charging Station Dock (Bottom Right) */}
+      {/* ── CHARGING STATION (HOME BASE) ── */}
       <div 
-        onClick={triggerKikoHome}
-        className="fixed bottom-4 right-4 z-[9990] bg-slate-950/90 border-2 border-orange-500/80 hover:border-orange-400 p-2 rounded-2xl shadow-2xl backdrop-blur-md cursor-pointer flex items-center gap-2.5 transition-all hover:scale-105 active:scale-95 text-xs text-orange-300 font-fredoka group"
-        title="Klik untuk membawa Kiko pulang ke KIKO HOME"
+        id="home-base-container"
+        className="fixed z-40 pointer-events-none"
+        style={{ left: 20, top: homeBasePos.y - 10 }}
       >
-        <div className="relative p-1.5 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl text-white shadow-sm">
-          <Home className={`w-4 h-4 ${isCharging ? 'animate-bounce' : 'group-hover:rotate-12 transition-transform'}`} />
-          {isCharging && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping border border-white" />}
-        </div>
-        <div className="flex flex-col text-[10px] font-mono leading-tight pr-1">
-          <span className="font-bold uppercase tracking-wider text-orange-200">KIKO HOME</span>
-          <span className="text-slate-400">Energi: {battery}%</span>
+        <div className="w-40 h-44 bg-white/20 backdrop-blur-md border border-white/40 rounded-t-[40px] rounded-b-2xl shadow-xl flex items-center justify-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/10 to-transparent"></div>
+          {/* Lightning Icon Background */}
+          <svg className="w-16 h-16 text-yellow-400 opacity-20" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
         </div>
       </div>
 
-      {/* Right Click Context Menu Overlay */}
-      {isContextMenuOpen && (
-        <div 
-          onClick={(e) => e.stopPropagation()}
-          className="fixed z-[10000] bg-slate-950/95 border-2 border-orange-500/80 rounded-2xl p-2 shadow-2xl backdrop-blur-xl text-xs font-fredoka text-slate-100 flex flex-col gap-1.5 w-52 animate-fade-in"
-          style={{
-            left: Math.min(pos.x + 20, (window.innerWidth || 400) - 220),
-            top: Math.min(pos.y + 20, (window.innerHeight || 600) - 220),
-          }}
-        >
-          <div className="flex items-center justify-between border-b border-slate-800 pb-1 px-1">
-            <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-orange-400" /> Menu Kiko
-            </span>
-            <button onClick={() => setIsContextMenuOpen(false)} className="text-slate-400 hover:text-white">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-          <button
-            onClick={() => {
-              setIsContextMenuOpen(false);
-              setIsChatOpen(true);
-              triggerPause();
-            }}
-            className="w-full py-1.5 px-2 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-left rounded-lg text-[11px] text-amber-300 flex items-center gap-2 font-bold"
-          >
-            <MessageSquare className="w-3.5 h-3.5 text-amber-400" /> Ngobrol sama Kiko
-          </button>
-          <button
-            onClick={triggerKikoHome}
-            className="w-full py-1.5 px-2 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-left rounded-lg text-[11px] text-orange-300 flex items-center gap-2 font-bold"
-          >
-            <Home className="w-3.5 h-3.5 text-orange-400" /> Pulang ke KIKO HOME
-          </button>
-          <button
-            onClick={() => {
-              setIsContextMenuOpen(false);
-              setMood('sleepy');
-              setSpeechBubble('Zzz... Kiko tidur dulu ya...');
-              setShowSpeech(true);
-            }}
-            className="w-full py-1.5 px-2 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-left rounded-lg text-[11px] text-indigo-300 flex items-center gap-2 font-bold"
-          >
-            <Moon className="w-3.5 h-3.5 text-indigo-400" /> Istirahat / Tidur
-          </button>
-          <a
-            href="https://linkedin.com/in/kuatriawan"
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => setIsContextMenuOpen(false)}
-            className="w-full py-1.5 px-2 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-left rounded-lg text-[11px] text-blue-300 flex items-center gap-2 font-bold"
-          >
-            <FileText className="w-3.5 h-3.5 text-blue-400" /> Lihat CV Kuat Riawan
-          </a>
-        </div>
-      )}
-
-      {/* Main Kiko Fox Mascot Wrapper */}
-      <div
-        className={`fixed transition-all ${
-          isDragging ? 'duration-0 z-[9999] scale-110 cursor-grabbing' : 'duration-700 ease-in-out z-[9999] cursor-grab'
-        } select-none pointer-events-auto`}
-        style={{
-          transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
-          top: 0,
-          left: 0,
+      <div 
+        id="mascot-container"
+        className="fixed z-50 select-none touch-none"
+        style={{ 
+          left: pos.x,
+          top: pos.y,
+          width: 200,
+          height: 240
         }}
-        onMouseDown={(e) => {
-          e.preventDefault();
-          startPointer(e.clientX, e.clientY);
-        }}
-        onTouchStart={(e) => {
-          if (e.touches.length > 0) startPointer(e.touches[0].clientX, e.touches[0].clientY);
-        }}
-        onDoubleClick={handleDoubleClick}
-        onContextMenu={handleContextMenu}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
-        <div className="relative group flex flex-col items-center">
+        <div className="relative w-full h-full group flex flex-col items-center justify-end">
           
-          {/* Speech Bubble */}
-          {showSpeech && (
-            <div
-              onMouseDown={(e) => e.stopPropagation()}
-              onTouchStart={(e) => e.stopPropagation()}
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => e.stopPropagation()}
-              className={`absolute ${
-                pos.y < 170 ? 'top-26' : '-top-44'
-              } -left-14 w-64 p-2.5 rounded-2xl shadow-2xl backdrop-blur-md animate-fade-in text-xs font-fredoka z-[9999] pointer-events-auto border-2 ${
-              mood === 'angry'
-                ? 'bg-rose-950/95 text-rose-100 border-rose-500'
-                : mood === 'dizzy'
-                ? 'bg-amber-950/95 text-amber-100 border-amber-500'
-                : mood === 'sad'
-                ? 'bg-blue-950/95 text-blue-100 border-blue-400'
-                : mood === 'love'
-                ? 'bg-pink-950/95 text-pink-100 border-pink-400'
-                : mood === 'surprised'
-                ? 'bg-yellow-950/95 text-yellow-100 border-yellow-400'
-                : mood === 'sleepy'
-                ? 'bg-indigo-950/95 text-indigo-100 border-indigo-400'
-                : mood === 'charging'
-                ? 'bg-orange-950/95 text-orange-100 border-orange-400'
-                : 'bg-slate-900/95 text-slate-100 border-orange-400'
-            }`}>
-              <div className="flex items-center justify-between gap-1 mb-1">
-                <div className="flex items-center space-x-1 text-[10px] font-bold uppercase tracking-wider">
-                  {mood === 'angry' ? (
-                    <Flame className="w-3.5 h-3.5 text-rose-400" />
-                  ) : mood === 'dizzy' ? (
-                    <RotateCw className="w-3.5 h-3.5 text-amber-400 animate-spin" />
-                  ) : mood === 'sad' ? (
-                    <CloudRain className="w-3.5 h-3.5 text-blue-400" />
-                  ) : mood === 'love' ? (
-                    <Heart className="w-3.5 h-3.5 text-pink-400 fill-pink-400" />
-                  ) : mood === 'surprised' ? (
-                    <AlertCircle className="w-3.5 h-3.5 text-yellow-400" />
-                  ) : mood === 'sleepy' ? (
-                    <Moon className="w-3.5 h-3.5 text-indigo-400" />
-                  ) : mood === 'charging' ? (
-                    <Home className="w-3.5 h-3.5 text-orange-400 animate-bounce" />
-                  ) : (
-                    <Sparkles className="w-3.5 h-3.5 text-orange-400" />
-                  )}
-                  <span className={
-                    mood === 'angry' ? 'text-rose-400' :
-                    mood === 'dizzy' ? 'text-amber-300' :
-                    mood === 'sad' ? 'text-blue-300' :
-                    mood === 'love' ? 'text-pink-300' :
-                    mood === 'surprised' ? 'text-yellow-300' :
-                    mood === 'sleepy' ? 'text-indigo-300' :
-                    mood === 'charging' ? 'text-orange-300' :
-                    'text-orange-400'
-                  }>
-                    Kiko Fox AI
-                  </span>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowSpeech(false);
-                  }}
-                  className="text-slate-400 hover:text-white p-0.5"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              
-              <p className="leading-snug text-[11px] mb-2">{speechBubble}</p>
-
-              {/* Interactive AI Chat Trigger or Input Column */}
-              {!isChatOpen ? (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsChatOpen(true);
-                    triggerPause();
-                  }}
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onTouchStart={(e) => e.stopPropagation()}
-                  className="w-full py-1.5 px-3 bg-orange-500/20 hover:bg-orange-500/35 border border-orange-400/50 hover:border-orange-400 text-orange-300 hover:text-orange-200 text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer shadow-xs"
-                >
-                  <MessageSquare className="w-3.5 h-3.5 text-orange-400" />
-                  <span>Tekan untuk mengobrol</span>
-                </button>
-              ) : (
-                <div className="flex flex-col gap-1.5">
-                  <form onSubmit={handleChatSubmit} className="flex items-center gap-1">
-                    <input
-                      type="text"
-                      autoFocus
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      onKeyDown={(e) => e.stopPropagation()}
-                      placeholder="Tanya Kiko..."
-                      className="w-full px-2.5 py-1 bg-slate-950/90 border border-orange-400/60 focus:border-orange-400 text-slate-100 placeholder-slate-400 text-[10px] rounded-lg outline-none font-sans"
-                    />
-                    <button
-                      type="submit"
-                      onClick={(e) => e.stopPropagation()}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      className="p-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:brightness-110 text-white rounded-lg transition-all font-bold flex items-center justify-center shrink-0 active:scale-95 border border-orange-300 shadow-xs cursor-pointer"
-                      title="Kirim pesan ke Kiko"
-                    >
-                      <Send className="w-3 h-3" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsChatOpen(false);
-                      }}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      className="p-1 text-slate-400 hover:text-white rounded-lg transition-all"
-                      title="Batal"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </form>
-
-                  {/* Quick Action Choices */}
-                  <div className="flex flex-wrap gap-1 pt-1 border-t border-slate-800">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        processQuery('Siapa Kuat Riawan?');
-                      }}
-                      className="px-1.5 py-0.5 bg-slate-800 hover:bg-orange-500/20 text-slate-300 hover:text-orange-300 text-[9px] rounded border border-slate-700 font-sans"
-                    >
-                      Siapa Kuat?
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        processQuery('Project-nya apa?');
-                      }}
-                      className="px-1.5 py-0.5 bg-slate-800 hover:bg-orange-500/20 text-slate-300 hover:text-orange-300 text-[9px] rounded border border-slate-700 font-sans"
-                    >
-                      Project-nya apa?
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        processQuery('Skill-nya apa?');
-                      }}
-                      className="px-1.5 py-0.5 bg-slate-800 hover:bg-orange-500/20 text-slate-300 hover:text-orange-300 text-[9px] rounded border border-slate-700 font-sans"
-                    >
-                      Skill-nya apa?
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        processQuery('Pengalamannya?');
-                      }}
-                      className="px-1.5 py-0.5 bg-slate-800 hover:bg-orange-500/20 text-slate-300 hover:text-orange-300 text-[9px] rounded border border-slate-700 font-sans"
-                    >
-                      Pengalamannya?
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        processQuery('Pendidikan?');
-                      }}
-                      className="px-1.5 py-0.5 bg-slate-800 hover:bg-orange-500/20 text-slate-300 hover:text-orange-300 text-[9px] rounded border border-slate-700 font-sans"
-                    >
-                      Pendidikan?
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        processQuery('Download CV');
-                      }}
-                      className="px-1.5 py-0.5 bg-slate-800 hover:bg-orange-500/20 text-slate-300 hover:text-orange-300 text-[9px] rounded border border-slate-700 font-sans"
-                    >
-                      Download CV
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Speech Pointer Arrow */}
-              <div className={`absolute ${
-                pos.y < 170 ? '-top-2 left-20 border-t-2 border-l-2' : '-bottom-2 left-20 border-b-2 border-r-2'
-              } w-3.5 h-3.5 rotate-45 ${
-                mood === 'angry'
-                  ? 'bg-rose-950 border-rose-500'
-                  : mood === 'dizzy'
-                  ? 'bg-amber-950 border-amber-500'
-                  : mood === 'sad'
-                  ? 'bg-blue-950 border-blue-400'
-                  : mood === 'love'
-                  ? 'bg-pink-950 border-pink-400'
-                  : mood === 'surprised'
-                  ? 'bg-yellow-950 border-yellow-400'
-                  : mood === 'sleepy'
-                  ? 'bg-indigo-950 border-indigo-400'
-                  : mood === 'charging'
-                  ? 'bg-orange-950 border-orange-400'
-                  : 'bg-slate-900 border-orange-400'
-              }`} />
-            </div>
-          )}
-
-          {/* 3D DIGITAL COMPANION FOX SVG AVATAR (KIKO) */}
-          <div
-            className={`transition-transform duration-300 ${
-              isDragging
-                ? 'rotate-12 scale-110 drop-shadow-2xl'
-                : isJumping
-                ? '-translate-y-6 rotate-12 scale-110'
-                : isRunning
-                ? 'scale-110 -translate-y-2'
-                : isHovered
-                ? 'scale-110'
-                : 'hover:scale-105 active:scale-95'
-            } ${direction === 'left' ? '-scale-x-100' : 'scale-x-100'}`}
-            title="Klik atau geser Kiko!"
+          {/* ── SPEECH BUBBLE ── */}
+          <div 
+            className={`absolute -top-10 bg-white/90 backdrop-blur text-slate-800 text-xs font-medium px-4 py-2 rounded-2xl rounded-bl-sm shadow-xl border border-white/50 transition-all duration-300 origin-bottom-left z-10 
+              ${(isHovered || mood === 'thinking' || mood === 'excited' || mood === 'angry') && !isDragging && !isFalling && !isPeeking ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}
+            `}
+            style={{ width: 'max-content', left: '75%' }}
           >
-            <svg width="90" height="100" viewBox="0 0 90 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-2xl">
-              <defs>
-                {/* Warm 3D Orange Fur Radial Gradient */}
-                <radialGradient id="foxHeadFur" cx="40%" cy="30%" r="70%">
-                  <stop offset="0%" stopColor="#fb923c" />
-                  <stop offset="60%" stopColor="#ea580c" />
-                  <stop offset="100%" stopColor="#c2410c" />
-                </radialGradient>
+            {mood === 'happy' && 'Halo! 👋'}
+            {mood === 'excited' && 'YAY! Keren banget! ✨'}
+            {mood === 'thinking' && (nearbyElementContext || 'Hmm... menarik nih 🤔')}
+            {mood === 'angry' && 'HENTIKAN! 💢'}
+            {mood === 'dizzy' && 'Pusing pusing pusing 😵‍💫'}
+            {mood === 'sad' && 'Jangan pergi... 💧'}
+            {mood === 'surprised' && 'WAAA! 😲'}
+            {mood === 'love' && 'Aku suka ini! ♥️'}
+            {mood === 'shy' && 'A-aku malu... 👉👈'}
+            {mood === 'sleepy' && 'Zzz... cape nih'}
+            {mood === 'sitting' && 'Lagi istirahat bentar...'}
+            {mood === 'waving' && 'Halo halo! Sini main! 👋'}
+            {mood === 'charging' && 'Mengisi daya... ⚡'}
+          </div>
 
-                {/* Real Pixar-style Warm Amber Animal Eye Iris */}
-                <radialGradient id="foxAmberEye" cx="35%" cy="35%" r="65%">
-                  <stop offset="0%" stopColor="#fef08a" />
-                  <stop offset="35%" stopColor="#f59e0b" />
-                  <stop offset="80%" stopColor="#b45309" />
-                  <stop offset="100%" stopColor="#451a03" />
-                </radialGradient>
-
-                {/* Soft Fluffy White Fur Gradient */}
-                <linearGradient id="whiteFurGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#ffffff" />
-                  <stop offset="100%" stopColor="#ffedd5" />
-                </linearGradient>
-              </defs>
-
-              {/* FLUFFY FOX TAIL (Clickable Easter Egg!) */}
-              <g onClick={handleTailClick} className="cursor-pointer group/tail">
-                <path
-                  d="M60 52 C76 42 90 48 86 68 C83 83 68 86 54 76 C47 70 52 58 60 52 Z"
-                  fill="url(#foxHeadFur)"
-                  className={mood === 'love' || isHovered ? 'animate-bounce' : ''}
-                />
-                {/* Dark Navy Tail Accent */}
-                <path d="M72 49 C78 47 84 53 82 63 C80 69 75 72 70 67 Z" fill="#0f172a" />
-                {/* Fluffy White Tail Tip */}
-                <path d="M78 59 C85 62 82 72 75 74 C72 71 74 65 78 59 Z" fill="url(#whiteFurGrad)" />
-              </g>
-
-              {/* FOX POINTY EARS */}
-              {/* Left Ear */}
-              <path d="M22 28 C 14 18 10 2 24 6 C 28 12 30 20 32 26 Z" fill="url(#foxHeadFur)" stroke="#0f172a" strokeWidth="2.5" />
-              <path d="M20 25 C 15 17 12 7 21 9 C 24 13 25 19 27 23 Z" fill="#0f172a" />
-              <path d="M22 23 C 18 17 16 10 21 11 C 23 14 24 18 25 21 Z" fill="#fdba74" />
-
-              {/* Right Ear */}
-              <path d="M68 28 C 76 18 80 2 66 6 C 62 12 60 20 58 26 Z" fill="url(#foxHeadFur)" stroke="#0f172a" strokeWidth="2.5" />
-              <path d="M70 25 C 75 17 78 7 69 9 C 66 13 65 19 63 23 Z" fill="#0f172a" />
-              <path d="M68 23 C 72 17 74 10 69 11 C 67 14 66 18 65 21 Z" fill="#fdba74" />
-
-              {/* WARM ORANGE 3D ANIMAL FOX HEAD */}
-              <circle cx="45" cy="32" r="22" fill="url(#foxHeadFur)" stroke="#0f172a" strokeWidth="3" />
+          {/* ── 3D MODEL CANVAS ── */}
+          <div
+            ref={mascotRef}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            onClick={handleBellyClick}
+            className="w-full h-full cursor-grab active:cursor-grabbing drop-shadow-[0_8px_16px_rgba(15,23,42,0.25)] z-10"
+            title="Penta Mascot 3D"
+            style={{
+               clipPath: isPeeking ? 'inset(0 0 0 50%)' : 'none',
+               transform: isPeeking ? 'translateX(-30px)' : 'none'
+            }}
+          >
+            <Canvas camera={{ position: [0, 1, 5], fov: 45 }} shadows dpr={[1, 2]}>
+              <ambientLight intensity={0.6} />
+              <directionalLight position={[5, 5, 5]} intensity={1.5} castShadow />
+              <directionalLight position={[-5, 5, 5]} intensity={0.5} />
               
-              {/* FLUFFY WHITE CHEEKS & MUZZLE */}
-              <path d="M23 32 Q 20 46 45 47 Q 70 46 67 32 Q 68 47 45 48 Q 22 47 23 32 Z" fill="url(#whiteFurGrad)" />
-              <ellipse cx="45" cy="38" rx="12" ry="7" fill="url(#whiteFurGrad)" />
-              
-              {/* CUTE ANIMAL NOSE */}
-              <ellipse cx="45" cy="35.5" rx="3.5" ry="2.5" fill="#0f172a" />
-              <ellipse cx="44" cy="34.8" rx="1.2" ry="0.7" fill="#ffffff" opacity="0.6" />
-
-              {/* REAL ANIMAL AMBER EYES & FACIAL EXPRESSIONS */}
-
-              {/* CHARGING MODE */}
-              {mood === 'charging' && (
-                <g>
-                  <path d="M30 28 Q 34 32 38 28" stroke="#78350f" strokeWidth="3" strokeLinecap="round" fill="none" />
-                  <path d="M52 28 Q 56 32 60 28" stroke="#78350f" strokeWidth="3" strokeLinecap="round" fill="none" />
-                  <path d="M41 40 Q 45 43 49 40" stroke="#7c2d12" strokeWidth="2" strokeLinecap="round" fill="none" />
-                </g>
-              )}
-
-              {/* ANGRY FACE */}
-              {mood === 'angry' && (
-                <g>
-                  <line x1="26" y1="20" x2="38" y2="25" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
-                  <line x1="64" y1="20" x2="52" y2="25" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
-                  <circle cx="34" cy="28" r="4.5" fill="#dc2626" />
-                  <circle cx="56" cy="28" r="4.5" fill="#dc2626" />
-                  <circle cx="34" cy="28" r="2" fill="#0f172a" />
-                  <circle cx="56" cy="28" r="2" fill="#0f172a" />
-                  <path d="M38 41 L42 37 L46 41 L50 37 L54 41" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" fill="none" />
-                </g>
-              )}
-
-              {/* DIZZY FACE */}
-              {mood === 'dizzy' && (
-                <g>
-                  <g className="animate-spin" style={{ transformOrigin: '45px 5px', animationDuration: '2s' }}>
-                    <polygon points="45,0 46.5,3 49.5,3.5 47,5.5 47.5,8.5 45,7 42.5,8.5 43,5.5 40.5,3.5 43.5,3" fill="#f59e0b" />
-                  </g>
-                  <path d="M30 28 A 3 3 0 1 1 34 30 A 1.5 1.5 0 1 1 32 28" stroke="#d97706" strokeWidth="2.5" fill="none" className="animate-spin" style={{ transformOrigin: '32px 28px' }} />
-                  <path d="M54 28 A 3 3 0 1 1 58 30 A 1.5 1.5 0 1 1 56 28" stroke="#d97706" strokeWidth="2.5" fill="none" className="animate-spin" style={{ transformOrigin: '56px 28px' }} />
-                  <path d="M38 40 Q 45 36 52 40" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-                </g>
-              )}
-
-              {/* SAD FACE */}
-              {mood === 'sad' && (
-                <g>
-                  <line x1="26" y1="22" x2="38" y2="19" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" />
-                  <line x1="64" y1="22" x2="52" y2="19" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" />
-                  <circle cx="34" cy="28" r="4.5" fill="url(#foxAmberEye)" />
-                  <circle cx="56" cy="28" r="4.5" fill="url(#foxAmberEye)" />
-                  <path d="M38 42 Q 45 37 52 42" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-                </g>
-              )}
-
-              {/* SURPRISED FACE */}
-              {mood === 'surprised' && (
-                <g>
-                  <circle cx="34" cy="27" r="5.5" fill="url(#foxAmberEye)" />
-                  <circle cx="56" cy="27" r="5.5" fill="url(#foxAmberEye)" />
-                  <circle cx="34" cy="27" r="2.5" fill="#0f172a" />
-                  <circle cx="56" cy="27" r="2.5" fill="#0f172a" />
-                  <circle cx="45" cy="39" r="3.5" fill="#0f172a" />
-                </g>
-              )}
-
-              {/* LOVE FACE */}
-              {mood === 'love' && (
-                <g>
-                  <path d="M30 26 C30 23 34 23 34 26 C34 23 38 23 38 26 C38 29 34 32 34 32 C34 32 30 29 30 26 Z" fill="#ec4899" />
-                  <path d="M52 26 C52 23 56 23 56 26 C56 23 60 23 60 26 C60 29 56 32 56 32 C56 32 52 29 52 26 Z" fill="#ec4899" />
-                  <circle cx="25" cy="33" r="3.5" fill="#f472b6" opacity="0.7" />
-                  <circle cx="65" cy="33" r="3.5" fill="#f472b6" opacity="0.7" />
-                  <path d="M38 38 Q 41 41 45 38 Q 48 41 52 38" stroke="#f472b6" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-                </g>
-              )}
-
-              {/* SLEEPY FACE */}
-              {mood === 'sleepy' && (
-                <g>
-                  <path d="M29 28 L34 31 L39 28" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-                  <path d="M51 28 L56 31 L61 28" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-                  <circle cx="48" cy="38" r="3.5" fill="#93c5fd" opacity="0.6" className="animate-pulse" />
-                  <text x="66" y="14" fill="#94a3b8" fontSize="10" fontWeight="bold" className="animate-bounce">Z</text>
-                  <text x="73" y="9" fill="#94a3b8" fontSize="8" fontWeight="bold" className="animate-bounce">z</text>
-                </g>
-              )}
-
-              {/* DEFAULT HAPPY FACE WITH WARM AMBER ANIMAL EYES & CURSOR TRACKING */}
-              {mood === 'happy' && (
-                <g>
-                  <circle cx="34" cy="28" r="5.5" fill="url(#foxAmberEye)" />
-                  <circle cx="56" cy="28" r="5.5" fill="url(#foxAmberEye)" />
-                  {/* Pupils tracking cursor */}
-                  <circle cx={34 + eyeOffset.dx} cy={28 + eyeOffset.dy} r="2.5" fill="#0f172a" />
-                  <circle cx={56 + eyeOffset.dx} cy={28 + eyeOffset.dy} r="2.5" fill="#0f172a" />
-                  {/* Double Catchlight Reflections */}
-                  <circle cx={35.5 + eyeOffset.dx} cy={26.5 + eyeOffset.dy} r="1.2" fill="#ffffff" />
-                  <circle cx={57.5 + eyeOffset.dx} cy={26.5 + eyeOffset.dy} r="1.2" fill="#ffffff" />
-                  <circle cx={33 + eyeOffset.dx} cy={29.5 + eyeOffset.dy} r="0.6" fill="#ffffff" opacity="0.7" />
-                  <circle cx={55 + eyeOffset.dx} cy={29.5 + eyeOffset.dy} r="0.6" fill="#ffffff" opacity="0.7" />
-                  {/* Pink Cheek Blush */}
-                  <circle cx="24" cy="33" r="3" fill="#f472b6" opacity="0.5" />
-                  <circle cx="66" cy="33" r="3" fill="#f472b6" opacity="0.5" />
-                  {/* Cute Smile Arc */}
-                  <path d="M37 38 Q 45 44 53 38" stroke="#7c2d12" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-                </g>
-              )}
-
-              {/* SOFT CHEST FUR TUFT */}
-              <path d="M42 46 L45 52 L48 46 L51 50 L45 44 L39 50 Z" fill="url(#whiteFurGrad)" />
-
-              {/* SOFT PEAR-SHAPED ORGANIC ANIMAL BODY */}
-              <path
-                d="M25 50 Q 18 78 45 78 Q 72 78 65 50 Q 45 54 25 50 Z"
-                fill={mood === 'angry' ? '#dc2626' : mood === 'sad' ? '#1d4ed8' : mood === 'dizzy' ? '#d97706' : 'url(#foxHeadFur)'}
-                stroke="#0f172a"
-                strokeWidth="3"
+              <MascotModel 
+                mood={mood}
+                isDragging={isDragging}
+                isFalling={isFalling}
+                isWalking={isWalking}
+                facingRight={facingRight}
+                eyeOffset={eyeOffset}
               />
               
-              {/* FLUFFY WHITE CHEST / BELLY */}
-              <ellipse cx="45" cy="65" rx="13" ry="10" fill="url(#whiteFurGrad)" />
-
-              {/* SOFT DARK NAVY ANIMAL PAWS */}
-              <ellipse cx="36" cy="67" rx="3.5" ry="3" fill="#0f172a" />
-              <ellipse cx="54" cy="67" rx="3.5" ry="3" fill="#0f172a" />
-
-              {/* ANIMATED ROUND ANIMAL FEET */}
-              <g className={isDragging || isPaused ? '' : 'animate-bounce'} style={{ animationDuration: isRunning ? '0.15s' : mood === 'angry' ? '0.2s' : '0.4s' }}>
-                <ellipse cx="34" cy="85" rx="5.5" ry="4" fill="#0f172a" />
-                <ellipse cx="56" cy="85" rx="5.5" ry="4" fill="#0f172a" />
-              </g>
-            </svg>
+              {/* Subtle drop shadow underneath the 3D model */}
+              <ContactShadows position={[0, -0.6, 0]} opacity={0.4} scale={5} blur={2} far={4} />
+            </Canvas>
           </div>
-
         </div>
       </div>
     </>
