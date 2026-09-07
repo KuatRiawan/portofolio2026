@@ -103,9 +103,9 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
         else if (mood === 'shy') targetIndex = 7;
         else if (mood === 'waving') targetIndex = 8;
         
-        if (targetIndex >= 0 && targetIndex < node.morphTargetInfluences.length) {
+        if (targetIndex >= 0 && node.morphTargetInfluences && targetIndex < node.morphTargetInfluences.length) {
            // Reduce intensity to 0.5 so it doesn't open its mouth too wide
-           node.morphTargetInfluences[targetIndex] = THREE.MathUtils.lerp(node.morphTargetInfluences[targetIndex], 0.5, delta * 15);
+           node.morphTargetInfluences[targetIndex] = THREE.MathUtils.lerp(node.morphTargetInfluences[targetIndex] || 0, 0.5, delta * 15);
         }
       }
     });
