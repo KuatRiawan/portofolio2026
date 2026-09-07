@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { soundFx } from '../services/soundEffects';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, ContactShadows, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
-import { useApp } from '../context/AppContext';
+import { useAppContext } from '../context/AppContext';
 
 interface ArcadeMascotProps {
   onScrollToArcade?: () => void;
@@ -140,6 +140,31 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
   
   // Cursor Tracking for Parallax
   const [eyeOffset, setEyeOffset] = useState({ dx: 0, dy: 0 });
+
+  const TEBAK_TEBAKAN = useMemo(() => [
+    "Benda apa yang kalau dibalik jadi rusak? ...Kasur! 😂",
+    "Kecil, hitam, keringetan? ...Semut lagi push up!",
+    "Kenapa nyamuk bunyinya nging? Karena dia nggak bisa ngong! 🦟",
+    "Ban apa yang enak dimakan? Bandeng presto dong~ 🐟",
+    "Sayur apa yang dingin? Kembang cold! 🥦",
+    "Pintu apa yang didorong sepuluh orang nggak kebuka? Pintu yang ada tulisannya 'Tarik'! 🚪",
+    "Hewan apa yang paling hening? Semute... 🤫",
+    "Cuaca lagi cerah nih, secerah masa depan kita! ✨",
+    "Semangat ya lihat portofolionya! Jangan lupa senyum! 😊",
+    "Udah minum air putih belum hari ini? 💧",
+    "Klik badanku buat melempar aku! Wusss~ 🚀",
+    "Kalau capek, istirahat ya! Jangan dipaksain... 🍵"
+  ], []);
+
+  const [currentQuote, setCurrentQuote] = useState(TEBAK_TEBAKAN[0]);
+
+  useEffect(() => {
+    const quoteInterval = setInterval(() => {
+      const randomIndex = Math.floor(Math.random() * TEBAK_TEBAKAN.length);
+      setCurrentQuote(TEBAK_TEBAKAN[randomIndex]);
+    }, 7000);
+    return () => clearInterval(quoteInterval);
+  }, [TEBAK_TEBAKAN]);
   
   // Dragging & Physics
   const [isDragging, setIsDragging] = useState(false);
@@ -601,7 +626,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
             `}
             style={{ width: 'max-content', left: '75%' }}
           >
-            {mood === 'happy' && 'Halo! 👋'}
+            {mood === 'happy' && currentQuote}
             {mood === 'excited' && 'YAY! Keren banget! ✨'}
             {mood === 'thinking' && (nearbyElementContext || 'Hmm... menarik nih 🤔')}
             {mood === 'angry' && 'HENTIKAN! 💢'}
@@ -612,7 +637,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
             {mood === 'shy' && 'A-aku malu... 👉👈'}
             {mood === 'sleepy' && 'Zzz... cape nih'}
             {mood === 'sitting' && 'Lagi istirahat bentar...'}
-            {mood === 'waving' && 'Halo halo! Sini main! 👋'}
+            {mood === 'waving' && currentQuote}
             {mood === 'charging' && 'Mengisi daya... ⚡'}
           </div>
           
