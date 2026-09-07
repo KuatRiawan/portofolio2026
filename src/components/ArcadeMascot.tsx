@@ -69,6 +69,7 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
     } else if (mood === 'excited' || mood === 'waving') {
       targetPosition.y = -0.4 + Math.abs(Math.sin(time * 15)) * 0.2;
       targetRotation.x = -0.2;
+    }
     // Apply rotation smoothing
     group.current.rotation.y = THREE.MathUtils.lerp(group.current.rotation.y, targetRotation.y, delta * 5);
     group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, targetRotation.x, delta * 5);
