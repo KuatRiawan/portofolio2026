@@ -6,7 +6,6 @@ body {
   max-width: 100vw !important;
   width: 100% !important;
   scroll-behavior: smooth;
-  cursor: url("data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2232%22 height=%2232%22 style=%22font-size: 24px;%22><text y=%2224%22>🗡️</text></svg>"), auto;
 }
 
 @layer base {
