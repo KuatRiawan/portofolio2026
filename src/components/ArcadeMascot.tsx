@@ -103,7 +103,8 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
         else if (mood === 'waving') targetIndex = 8;
         
         if (targetIndex >= 0 && targetIndex < node.morphTargetInfluences.length) {
-           node.morphTargetInfluences[targetIndex] = THREE.MathUtils.lerp(node.morphTargetInfluences[targetIndex], 1, delta * 15);
+           // Reduce intensity to 0.5 so it doesn't open its mouth too wide
+           node.morphTargetInfluences[targetIndex] = THREE.MathUtils.lerp(node.morphTargetInfluences[targetIndex], 0.5, delta * 15);
         }
       }
     });
