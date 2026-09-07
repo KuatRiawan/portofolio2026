@@ -228,23 +228,17 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
     if (isDragging || isWalking || isFalling || isRecovering) return;
     
     idleTimerRef.current = setTimeout(() => {
-      // 70% chance to walk somewhere randomly, 30% to just change mood
-      if (Math.random() > 0.3) {
-         const rx = window.scrollX + Math.max(50, Math.random() * (window.innerWidth - 250));
-         const ry = window.scrollY + Math.max(50, Math.random() * (window.innerHeight - 250));
-         
-         setTargetPos({ x: rx, y: ry });
-         setFacingRight(rx > pos.x);
-         setIsWalking(true);
-         setMood(Math.random() > 0.5 ? 'happy' : 'excited');
-         setNearbyElementContext(null);
-         try { soundFx.playMoveWhirr(); } catch(e) {}
-      } else {
-        const actions: MascotMood[] = ['sitting', 'sleepy', 'happy', 'thinking', 'waving'];
-        const action = actions[Math.floor(Math.random() * actions.length)];
-        setMood(action);
-      }
-    }, 4000 + Math.random() * 3000); // 4 to 7 seconds interval
+      // Walk to a random position
+      const rx = window.scrollX + Math.max(50, Math.random() * (window.innerWidth - 250));
+      const ry = window.scrollY + Math.max(50, Math.random() * (window.innerHeight - 250));
+      
+      setTargetPos({ x: rx, y: ry });
+      setFacingRight(rx > pos.x);
+      setIsWalking(true);
+      setMood(Math.random() > 0.5 ? 'happy' : 'excited');
+      setNearbyElementContext(null);
+      try { soundFx.playMoveWhirr(); } catch(e) {}
+    }, 3000 + Math.random() * 2000); // 3 to 5 seconds interval
   };
 
   useEffect(() => {
@@ -286,10 +280,9 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
     };
   }, []);
 
-  // ─── Cursor wake-up & Parallax ───
+  // ─── Mouse Look & Pet Mode Tracking ───
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      resetIdleTimer();
       if (!mascotRef.current || isDragging || isFalling || isRecovering) return;
       
       if (isPetMode) {
