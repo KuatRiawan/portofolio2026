@@ -22,6 +22,7 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
   theme: string;
 }) {
   const group = useRef<THREE.Group>(null);
+  
   const { scene, animations, nodes } = useGLTF('/Karakter/ssrbs_2.0_hololive.glb') as any;
   const { actions } = useAnimations(animations, group);
 
@@ -32,7 +33,7 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
       const action = actions[actionNames[0]];
       if (action) action.reset().fadeIn(0.2).play();
     }
-  }, [actions]);
+  }, [actions, theme]);
 
 
   useFrame((state, delta) => {
@@ -69,6 +70,12 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
       targetPosition.y = -0.4 + Math.abs(Math.sin(time * 15)) * 0.2;
       targetRotation.x = -0.2;
     }
+
+    // In v2, the character for dark mode (Object_16) was modeled facing backwards by default
+    // We offset the rotation by 180 degrees (Math.PI) so it faces forwards
+    if (theme === 'dark') {
+      targetRotation.y += Math.PI;
+    }
     
     // Apply rotation smoothing
     group.current.rotation.y = THREE.MathUtils.lerp(group.current.rotation.y, targetRotation.y, delta * 5);
@@ -80,22 +87,19 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
 
     // Dynamic facial expressions based on mood (MorphTargets) and Colors
     scene.traverse((node: any) => {
-      // Toggle meshes based on theme
-      // White SSRB starts with Object_5
-      // Black SSRB starts with Object_16 (previously thought to be green)
-      // Green SSRB starts with Object_10 or Object_11
+      // v2 has multiple meshes, hide the green/monocle ones if we are in light mode
       if (node.isMesh) {
         if (theme === 'dark') {
-          // Show black, hide others
+          // Show monocle (Object_16), hide others
           if (node.name.startsWith('Object_16')) {
             node.visible = true;
           } else {
             node.visible = false;
           }
         } else {
-          // Show white, hide others
+          // Show normal white (Object_5), hide others
           if (node.name.startsWith('Object_5')) {
-            node.visible = true;
+            node.visible = true; 
           } else {
             node.visible = false;
           }
@@ -131,7 +135,7 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
     <group ref={group} dispose={null}>
       {/* Adjusted scale so it fits nicely on the screen */}
       <group rotation={[0, 0, 0]}>
-        <primitive object={scene} scale={3} position={[0, -0.4, 0]} rotation={[0, theme === 'dark' ? Math.PI : 0, 0]} />
+        <primitive object={scene} scale={3} position={[0, -0.4, 0]} />
       </group>
     </group>
   );
@@ -139,7 +143,6 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
 
 // Preload to avoid jitter
 useGLTF.preload('/Karakter/ssrbs_2.0_hololive.glb');
-useGLTF.preload('/Karakter/ssrbs_hololive.glb');
 
 export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
   const { theme, toggleTheme } = useApp();
