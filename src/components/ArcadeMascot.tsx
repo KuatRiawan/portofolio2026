@@ -193,30 +193,29 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
     }
   };
 
-  // ─── IDLE AI ───
+  // ─── IDLE AI (Wandering) ───
   const resetIdleTimer = () => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     if (isDragging || isWalking || isFalling || isRecovering) return;
     
     idleTimerRef.current = setTimeout(() => {
-      // 50% chance to do a random action, 50% chance to go home and charge
-      if (Math.random() > 0.5) {
-        const actions: MascotMood[] = ['sitting', 'sleepy', 'happy', 'thinking'];
+      // 70% chance to walk somewhere randomly, 30% to just change mood
+      if (Math.random() > 0.3) {
+         const rx = Math.max(50, Math.random() * (window.innerWidth - 250));
+         const ry = Math.max(50, Math.random() * (window.innerHeight - 250));
+         
+         setTargetPos({ x: rx, y: ry });
+         setFacingRight(rx > pos.x);
+         setIsWalking(true);
+         setMood(Math.random() > 0.5 ? 'happy' : 'excited');
+         setNearbyElementContext(null);
+         try { soundFx.playMoveWhirr(); } catch(e) {}
+      } else {
+        const actions: MascotMood[] = ['sitting', 'sleepy', 'happy', 'thinking', 'waving'];
         const action = actions[Math.floor(Math.random() * actions.length)];
         setMood(action);
-        
-        if (action === 'happy') {
-          setIsWalking(true);
-          setTimeout(() => setIsWalking(false), 3000);
-        }
-      } else {
-        // GO HOME TO CHARGE
-        setTargetPos({ x: homeBasePos.x, y: homeBasePos.y });
-        setFacingRight(homeBasePos.x > pos.x);
-        setIsWalking(true);
-        setMood('sleepy');
       }
-    }, 12000);
+    }, 4000 + Math.random() * 3000); // 4 to 7 seconds interval
   };
 
   useEffect(() => {
