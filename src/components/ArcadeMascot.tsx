@@ -3,7 +3,7 @@ import { soundFx } from '../services/soundEffects';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, ContactShadows, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
-import { useAppContext } from '../context/AppContext';
+import { useApp } from '../context/AppContext';
 
 interface ArcadeMascotProps {
   onScrollToArcade?: () => void;
@@ -128,7 +128,7 @@ useGLTF.preload('/Karakter/ssrbs_2.0_hololive.glb');
 useGLTF.preload('/Karakter/ssrbs_hololive.glb');
 
 export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
-  const { theme, toggleTheme } = useAppContext();
+  const { theme, toggleTheme } = useApp();
   const [isPetMode, setIsPetMode] = useState(false);
   // ─── STATE ───
   const [mood, setMood] = useState<MascotMood>('happy');
