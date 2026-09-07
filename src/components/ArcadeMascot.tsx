@@ -201,8 +201,8 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
     idleTimerRef.current = setTimeout(() => {
       // 70% chance to walk somewhere randomly, 30% to just change mood
       if (Math.random() > 0.3) {
-         const rx = Math.max(50, Math.random() * (window.innerWidth - 250));
-         const ry = Math.max(50, Math.random() * (window.innerHeight - 250));
+         const rx = window.scrollX + Math.max(50, Math.random() * (window.innerWidth - 250));
+         const ry = window.scrollY + Math.max(50, Math.random() * (window.innerHeight - 250));
          
          setTargetPos({ x: rx, y: ry });
          setFacingRight(rx > pos.x);
@@ -281,8 +281,8 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
       
       if (isDragging || isFalling) return;
       
-      const tx = e.clientX - 100; 
-      const ty = e.clientY - 120; 
+      const tx = e.pageX - 100; 
+      const ty = e.pageY - 120; 
       
       setTargetPos({ x: tx, y: ty });
       setFacingRight(tx > pos.x);
@@ -356,9 +356,9 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
     setIsFalling(false);
     setIsRecovering(false);
     
-    dragStart.current = { x: e.clientX, y: e.clientY };
+    dragStart.current = { x: e.pageX, y: e.pageY };
     posStart.current = { ...pos };
-    lastMousePos.current = { x: e.clientX, y: e.clientY, time: performance.now() };
+    lastMousePos.current = { x: e.pageX, y: e.pageY, time: performance.now() };
     velocities.current = [];
     shakeCount.current = 0;
     
@@ -373,14 +373,14 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
     if (!isDragging) return;
     e.stopPropagation();
     
-    const dx = e.clientX - dragStart.current.x;
-    const dy = e.clientY - dragStart.current.y;
+    const dx = e.pageX - dragStart.current.x;
+    const dy = e.pageY - dragStart.current.y;
     
     const now = performance.now();
     const dt = now - lastMousePos.current.time;
     if (dt > 0) {
-      const vx = (e.clientX - lastMousePos.current.x) / dt;
-      const vy = (e.clientY - lastMousePos.current.y) / dt;
+      const vx = (e.pageX - lastMousePos.current.x) / dt;
+      const vy = (e.pageY - lastMousePos.current.y) / dt;
       velocities.current.push({ vx, vy });
       if (velocities.current.length > 5) velocities.current.shift();
       
@@ -397,7 +397,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
       }
     }
     
-    lastMousePos.current = { x: e.clientX, y: e.clientY, time: now };
+    lastMousePos.current = { x: e.pageX, y: e.pageY, time: now };
 
     setPos({
       x: posStart.current.x + dx,
@@ -413,13 +413,13 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
     resetIdleTimer();
     
     // Check if dragged to edge for peeking
-    if (pos.x < -10) {
-      setPos(p => ({ ...p, x: -30 }));
+    if (pos.x < window.scrollX - 10) {
+      setPos(p => ({ ...p, x: window.scrollX - 30 }));
       setMood('peeking');
       setFacingRight(true);
       return;
-    } else if (pos.x > window.innerWidth - 110) {
-      setPos(p => ({ ...p, x: window.innerWidth - 110 }));
+    } else if (pos.x > window.scrollX + window.innerWidth - 110) {
+      setPos(p => ({ ...p, x: window.scrollX + window.innerWidth - 110 }));
       setMood('peeking');
       setFacingRight(false);
       return;
@@ -449,8 +449,8 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
       const throwDuration = 500;
       const startX = pos.x;
       const startY = pos.y;
-      const targetX = Math.max(0, Math.min(window.innerWidth - 100, startX + avgVx * throwDuration));
-      const targetY = window.innerHeight - 150; 
+      const targetX = Math.max(window.scrollX, Math.min(window.scrollX + window.innerWidth - 100, startX + avgVx * throwDuration));
+      const targetY = window.scrollY + window.innerHeight - 150; 
       
       let startTime = performance.now();
       const throwAnim = (time: number) => {
@@ -539,7 +539,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
 
       <div 
         id="mascot-container"
-        className="fixed z-50 select-none touch-none"
+        className="absolute z-50 select-none touch-none"
         style={{ 
           left: pos.x,
           top: pos.y,
