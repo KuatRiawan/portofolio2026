@@ -22,8 +22,7 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
   theme: string;
 }) {
   const group = useRef<THREE.Group>(null);
-  const gltfPath = theme === 'dark' ? '/Karakter/ssrbs_hololive.glb' : '/Karakter/ssrbs_2.0_hololive.glb';
-  const { scene, animations } = useGLTF(gltfPath) as any;
+  const { scene, animations, nodes } = useGLTF('/Karakter/ssrbs_2.0_hololive.glb') as any;
   const { actions } = useAnimations(animations, group);
 
   useEffect(() => {
@@ -68,24 +67,39 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
       targetRotation.y = time * 5; // Spin slowly
     } else if (mood === 'excited' || mood === 'waving') {
       targetPosition.y = -0.4 + Math.abs(Math.sin(time * 15)) * 0.2;
-    } else if (mood === 'peeking') {
-      targetRotation.y = facingRight ? Math.PI / 2 : -Math.PI / 2;
+      targetRotation.x = -0.2;
     }
     
-    // Smooth damp towards target
-    group.current.rotation.x = THREE.MathUtils.damp(group.current.rotation.x, targetRotation.x, 5, delta);
-    group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, targetRotation.y, 5, delta);
-    group.current.rotation.z = THREE.MathUtils.damp(group.current.rotation.z, targetRotation.z, 5, delta);
+    // Apply rotation smoothing
+    group.current.rotation.y = THREE.MathUtils.lerp(group.current.rotation.y, targetRotation.y, delta * 5);
+    group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, targetRotation.x, delta * 5);
+    group.current.rotation.z = THREE.MathUtils.lerp(group.current.rotation.z, targetRotation.z, delta * 5);
     
-    group.current.position.x = THREE.MathUtils.damp(group.current.position.x, targetPosition.x, 5, delta);
-    group.current.position.y = THREE.MathUtils.damp(group.current.position.y, targetPosition.y, 5, delta);
-    group.current.position.z = THREE.MathUtils.damp(group.current.position.z, targetPosition.z, 5, delta);
-    
-    // Apply Morph Targets (Expressions) and hide extra characters
+    // Apply position smoothing
+    group.current.position.y = THREE.MathUtils.lerp(group.current.position.y, targetPosition.y, delta * 8);
+
+    // Dynamic facial expressions based on mood (MorphTargets) and Colors
     scene.traverse((node: any) => {
-      // Hide the black and green SSRBs (they use names starting with Object_10, 11, 16)
-      if (node.isMesh && (node.name.startsWith('Object_10') || node.name.startsWith('Object_11') || node.name.startsWith('Object_16'))) {
-        node.visible = false;
+      // Toggle meshes based on theme
+      // White SSRB starts with Object_5
+      // Black SSRB starts with Object_10 or Object_11
+      // Green SSRB starts with Object_16
+      if (node.isMesh) {
+        if (theme === 'dark') {
+          // Show black, hide others
+          if (node.name.startsWith('Object_10') || node.name.startsWith('Object_11')) {
+            node.visible = true;
+          } else {
+            node.visible = false;
+          }
+        } else {
+          // Show white, hide others
+          if (node.name.startsWith('Object_5')) {
+            node.visible = true;
+          } else {
+            node.visible = false;
+          }
+        }
       }
       
       if (node.isMesh && node.morphTargetInfluences) {
