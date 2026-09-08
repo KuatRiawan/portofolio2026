@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Volume2, VolumeX, Sparkles, Sun, Moon, Globe } from 'lucide-react';
-import type { ProjectCapsule, ClawState } from '../types/portfolio';
+import type { ProjectCapsule, ClawState, GuestMessage } from '../types/portfolio';
 import { MesinHeader } from './MesinHeader';
 import { MesinChamberCanvas } from './MesinChamberCanvas';
 import { MesinControlPanel } from './MesinControlPanel';
@@ -15,6 +15,7 @@ interface ArcadeFullscreenViewProps {
   onGrabTrigger: () => void;
   onClawHitBall?: () => void;
   onCapsuleCaught: (project: ProjectCapsule) => void;
+  onGuestMessageCaught?: (guestMessage: GuestMessage) => void;
   caughtProjects: ProjectCapsule[];
   onOpenDeskripsiKarya: () => void;
   onResetMachine: () => void;
@@ -31,6 +32,7 @@ export const ArcadeFullscreenView: React.FC<ArcadeFullscreenViewProps> = ({
   onGrabTrigger,
   onClawHitBall,
   onCapsuleCaught,
+  onGuestMessageCaught,
   caughtProjects,
   onOpenDeskripsiKarya,
   onResetMachine,
@@ -148,6 +150,7 @@ export const ArcadeFullscreenView: React.FC<ArcadeFullscreenViewProps> = ({
               onClawMove={onDirectClawMove}
               onClawHitBall={onClawHitBall}
               onCapsuleCaught={onCapsuleCaught}
+              onGuestMessageCaught={onGuestMessageCaught}
               caughtProjectIds={caughtProjects.map((p) => p.id)}
               shakeCount={shakeCount}
             />

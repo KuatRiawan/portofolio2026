@@ -13,6 +13,7 @@ interface AppContextType {
   t: typeof translations['id'];
   guestMessages: GuestMessage[];
   addGuestMessage: (msg: GuestMessage) => void;
+  removeGuestMessage: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -30,7 +31,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return (saved === 'en' || saved === 'id') ? saved : 'id';
   });
 
-  const [guestMessages, setGuestMessages] = useState<GuestMessage[]>([]);
+  const [guestMessages, setGuestMessages] = useState<GuestMessage[]>(() => {
+    const saved = localStorage.getItem('app_guest_messages');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return [];
+      }
+    }
+    // Default seed messages for empty state
+    return [
+      { id: 'guest-init-1', name: 'John Doe', message: 'Wah UI mesin capitnya keren banget! Semangat terus mas Kuat 💪', color: '#f59e0b' },
+      { id: 'guest-init-2', name: 'UI/UX Tester', message: 'Animasi 3D-nya smooth, detail shadow-nya dapet. Nice work!', color: '#ec4899' },
+      { id: 'guest-init-3', name: 'HR Recruiter', message: 'CV yang sangat interaktif dan out of the box!', color: '#3b82f6' }
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('app_guest_messages', JSON.stringify(guestMessages));
+  }, [guestMessages]);
 
   useEffect(() => {
     localStorage.setItem('app_theme', theme);
@@ -66,10 +86,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setGuestMessages((prev) => [...prev, msg]);
   };
 
+  const removeGuestMessage = (id: string) => {
+    setGuestMessages((prev) => prev.filter(msg => msg.id !== id));
+  };
+
   const t = translations[lang];
 
   return (
-    <AppContext.Provider value={{ theme, toggleTheme, lang, setLang, toggleLang, t, guestMessages, addGuestMessage }}>
+    <AppContext.Provider value={{ theme, toggleTheme, lang, setLang, toggleLang, t, guestMessages, addGuestMessage, removeGuestMessage }}>
       {children}
     </AppContext.Provider>
   );

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { PROJECTS_DATA } from './data/projectsData';
-import type { ProjectCapsule, ClawState } from './types/portfolio';
+import type { ProjectCapsule, ClawState, GuestMessage } from './types/portfolio';
 import { LandingNavbar } from './components/LandingNavbar';
 import { LandingSections } from './components/LandingSections';
 import { ArcadeLoadingOverlay } from './components/ArcadeLoadingOverlay';
@@ -8,6 +8,7 @@ import { ArcadeFullscreenView } from './components/ArcadeFullscreenView';
 import { ArcadeMascot } from './components/ArcadeMascot';
 import { ProjectModal } from './components/ProjectModal';
 import { RakCapitModal } from './components/RakCapitModal';
+import { GuestMessageViewModal } from './components/GuestMessageViewModal';
 import { soundFx } from './services/soundEffects';
 import { useApp } from './context/AppContext';
 
@@ -15,6 +16,7 @@ export function App() {
   const { t, theme } = useApp();
   const [projects] = useState<ProjectCapsule[]>(PROJECTS_DATA);
   const [selectedProject, setSelectedProject] = useState<ProjectCapsule | null>(null);
+  const [selectedGuestMessage, setSelectedGuestMessage] = useState<GuestMessage | null>(null);
   const [isRakCapitOpen, setIsRakCapitOpen] = useState(false);
   const [caughtProjects, setCaughtProjects] = useState<ProjectCapsule[]>([]);
 
@@ -288,6 +290,7 @@ export function App() {
           onGrabTrigger={executeGrabSequence}
           onClawHitBall={handleClawHitBall}
           onCapsuleCaught={handleCapsuleCaught}
+          onGuestMessageCaught={(msg) => setSelectedGuestMessage(msg)}
           caughtProjects={caughtProjects}
           onOpenDeskripsiKarya={() => setIsRakCapitOpen(true)}
           onResetMachine={handleResetMachine}
@@ -329,6 +332,7 @@ export function App() {
 
       {/* Modals */}
       <ProjectModal project={selectedProject} onClose={() => setSelectedProject(null)} />
+      <GuestMessageViewModal message={selectedGuestMessage} onClose={() => setSelectedGuestMessage(null)} />
       
       <RakCapitModal
         isOpen={isRakCapitOpen}

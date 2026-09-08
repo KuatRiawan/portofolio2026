@@ -22,6 +22,7 @@ interface MesinChamberCanvasProps {
   onClawMove: (x: number, y: number) => void;
   onClawHitBall?: (hitY?: number) => void;
   onCapsuleCaught: (project: ProjectCapsule) => void;
+  onGuestMessageCaught?: (guestMessage: GuestMessage) => void;
   caughtProjectIds: string[];
   shakeCount?: number;
 }
@@ -32,6 +33,7 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
   onClawMove: _onClawMove,
   onClawHitBall,
   onCapsuleCaught,
+  onGuestMessageCaught,
   caughtProjectIds,
   shakeCount = 0
 }) => {
@@ -154,10 +156,17 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
       clawStateRef.current.grabbedCapsuleId = null;
       
       if ('message' in proj) {
+        // Remove from canvas items
+        itemsRef.current = itemsRef.current.filter((item) => item.id !== proj.id);
+        
         // Caught a guest message
-        setTimeout(() => {
-          alert(`Pesan Tamu ditangkap!\nDari: ${(proj as any).name}\n\n"${(proj as any).message}"`);
-        }, 500);
+        if (onGuestMessageCaught) {
+          onGuestMessageCaught(proj as unknown as GuestMessage);
+        } else {
+          setTimeout(() => {
+            alert(`Pesan Tamu ditangkap!\nDari: ${(proj as any).name}\n\n"${(proj as any).message}"`);
+          }, 500);
+        }
       } else {
         onCapsuleCaught(proj as ProjectCapsule);
       }
@@ -201,7 +210,10 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
       };
     });
 
-    itemsRef.current = updatedItems;
+    // Preserve guest messages that are currently in the chamber
+    const guestItems = itemsRef.current.filter((item) => item.type === 'guest');
+
+    itemsRef.current = [...updatedItems, ...guestItems];
   }, [projects, caughtIdsKey]);
 
   // Handle new guest messages dropping in
@@ -470,24 +482,26 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
           ctx.stroke();
 
           // 3. CENTER BLACK SEAM BAND
-          ctx.fillStyle = '#0f172a';
-          ctx.fillRect(-capRad + 1, -3, (capRad - 1) * 2, 6);
+          if (item.type !== 'guest') {
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(-capRad + 1, -3, (capRad - 1) * 2, 6);
 
-          // 4. CENTER METALLIC SILVER PUSH-BUTTON
-          ctx.fillStyle = '#0f172a';
-          ctx.beginPath();
-          ctx.arc(0, 0, 7, 0, Math.PI * 2);
-          ctx.fill();
+            // 4. CENTER METALLIC SILVER PUSH-BUTTON
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.arc(0, 0, 7, 0, Math.PI * 2);
+            ctx.fill();
 
-          ctx.fillStyle = '#cbd5e1';
-          ctx.beginPath();
-          ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
-          ctx.fill();
+            ctx.fillStyle = '#cbd5e1';
+            ctx.beginPath();
+            ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+            ctx.fill();
 
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.arc(-1, -1, 1.5, 0, Math.PI * 2);
-          ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(-1, -1, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
 
           // 5. Specular Crescent Arc Highlight
           ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
@@ -495,16 +509,6 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
           ctx.ellipse(-capRad * 0.3, -capRad * 0.5, capRad * 0.4, capRad * 0.15, -0.35, 0, Math.PI * 2);
           ctx.fill();
           
-          // 6. Guest Message Initials
-          if (item.type === 'guest' && item.guestMessage) {
-            ctx.fillStyle = '#0f172a';
-            ctx.font = '900 11px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            const initials = item.guestMessage.name.substring(0, 2).toUpperCase();
-            ctx.fillText(initials, 0, capRad * 0.45);
-          }
-
           ctx.restore();
 
           // Check claw grab suction - Stop lowering immediately on ball contact!
