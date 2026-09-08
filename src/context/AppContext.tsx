@@ -54,8 +54,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             ]);
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching messages:', error);
+        alert('DEBUG GET ERROR: ' + error.message);
       } finally {
         setIsLoadingMessages(false);
       }
@@ -100,13 +101,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     
     // Save to DB
     try {
-      await fetch('/api/messages', {
+      const res = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: msg })
       });
-    } catch (e) {
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        alert('DEBUG POST ERROR: ' + res.status + ' ' + (errData.error || res.statusText));
+      }
+    } catch (e: any) {
       console.error('Failed to save message', e);
+      alert('DEBUG POST EXCEPTION: ' + e.message);
     }
   };
 
