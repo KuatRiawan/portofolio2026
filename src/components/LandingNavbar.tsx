@@ -19,8 +19,18 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({
   const { theme, toggleTheme, lang, toggleLang, t } = useApp();
   const isLight = theme === 'light';
 
+  const handleThemeToggleWithMascot = () => {
+    // 1. Dispatch event to make mascot jump
+    window.dispatchEvent(new CustomEvent('mascot-theme-jump'));
+    
+    // 2. Toggle theme exactly when mascot's curtain covers the screen (at ~1400ms)
+    setTimeout(() => {
+      toggleTheme();
+    }, 1400);
+  };
+
   return (
-    <nav className={`sticky top-0 z-50 w-full max-w-full overflow-x-hidden backdrop-blur-md border-b transition-colors duration-300 select-none ${
+    <nav className={`fixed top-0 left-0 z-50 w-full max-w-full overflow-x-hidden backdrop-blur-md border-b transition-colors duration-300 select-none ${
       isLight ? 'bg-white/90 border-slate-200 text-slate-900 shadow-sm' : 'bg-slate-900/80 border-slate-800/80 text-white'
     }`}>
       <div className="w-full max-w-full px-3 sm:px-8 lg:px-12 xl:px-16 h-16 flex items-center justify-between">
@@ -132,7 +142,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({
 
           {/* Theme Switcher Button (Dark / Light) */}
           <button
-            onClick={toggleTheme}
+            onClick={handleThemeToggleWithMascot}
             className={`p-1.5 sm:p-2 rounded-xl border shadow-sm transition-colors ${
               isLight
                 ? 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200'

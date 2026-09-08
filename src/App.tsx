@@ -259,7 +259,7 @@ export function App() {
   };
 
   return (
-    <div className={`min-h-screen font-sans flex flex-col selection:bg-orange-500 selection:text-white transition-colors duration-300 overflow-x-hidden w-full max-w-full ${theme === 'light' ? 'bg-slate-100 text-slate-900' : 'bg-[#0f172a] text-slate-100'}`}>
+    <div className={`min-h-screen font-sans flex flex-col selection:bg-orange-500 selection:text-white transition-colors duration-300 w-full max-w-full ${theme === 'light' ? 'bg-slate-100 text-slate-900' : 'bg-[#0f172a] text-slate-100'}`}>
       
       {/* Background YouTube Autoplay Audio Player for Post Malone, Swae Lee - Sunflower */}
       <iframe
@@ -305,7 +305,7 @@ export function App() {
             onToggleAudio={toggleAudio}
           />
 
-          <main className="flex-1">
+          <main className="flex-1 pt-16">
             <LandingSections
               onScrollToArcade={handleOpenArcadeFullscreen}
               onSelectProject={(proj) => setSelectedProject(proj)}

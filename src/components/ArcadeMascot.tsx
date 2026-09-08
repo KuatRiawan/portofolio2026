@@ -199,6 +199,47 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
   const [isFalling, setIsFalling] = useState(false);
   const [isRecovering, setIsRecovering] = useState(false);
   
+  const homeBasePos = { x: 40, y: window.innerHeight - 170 };
+  
+  // Theme Transition
+  const [isThemeJumping, setIsThemeJumping] = useState(false);
+  const [themeJumpPhase, setThemeJumpPhase] = useState<'none' | 'jumping' | 'dropping'>('none');
+  const [curtainTargetTheme, setCurtainTargetTheme] = useState<'light' | 'dark'>('dark');
+
+  useEffect(() => {
+    const handleThemeJump = () => {
+      if (isDragging || isFalling || isWalking) return;
+      
+      const isCurrentlyLight = document.documentElement.getAttribute('data-theme') === 'light';
+      setCurtainTargetTheme(isCurrentlyLight ? 'dark' : 'light');
+      
+      setIsThemeJumping(true);
+      setThemeJumpPhase('jumping');
+      
+      // Step 1: Jump to top center quickly
+      setPos({ x: window.innerWidth / 2 - 100, y: -50 });
+      setMood('surprised');
+      
+      // Step 2: Drop all the way down below screen to "pull" the curtain
+      setTimeout(() => {
+        setThemeJumpPhase('dropping');
+        // Drop far below the screen to drag the curtain down with it
+        setPos({ x: window.innerWidth / 2 - 100, y: window.innerHeight * 2 + 500 });
+        setMood('happy');
+      }, 800); // 800ms jump up duration
+      
+      // Step 3: Reset after the drop finishes
+      setTimeout(() => {
+        setIsThemeJumping(false);
+        setThemeJumpPhase('none');
+        setPos(homeBasePos);
+      }, 800 + 1500); // 1500ms drop duration
+    };
+    
+    window.addEventListener('mascot-theme-jump', handleThemeJump);
+    return () => window.removeEventListener('mascot-theme-jump', handleThemeJump);
+  }, [isDragging, isFalling, isWalking, homeBasePos]);
+  
   // ─── REFS ───
   const mascotRef = useRef<HTMLDivElement>(null);
   const moodResetTimerRef = useRef<number | null>(null);
@@ -210,8 +251,6 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
   const lastMousePos = useRef({ x: 0, y: 0, time: 0 });
   const velocities = useRef<{vx: number, vy: number}[]>([]);
   const shakeCount = useRef(0);
-  
-  const homeBasePos = { x: 40, y: window.innerHeight - 170 };
 
   // ─── HELPER: Check Nearby Elements ───
   const checkNearbyElements = (currentX: number, currentY: number) => {
@@ -257,8 +296,8 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
     
     idleTimerRef.current = setTimeout(() => {
       // Walk to a random position
-      const rx = window.scrollX + Math.max(50, Math.random() * (window.innerWidth - 250));
-      const ry = window.scrollY + Math.max(50, Math.random() * (window.innerHeight - 250));
+      const rx = Math.max(50, Math.random() * (window.innerWidth - 250));
+      const ry = Math.max(50, Math.random() * (window.innerHeight - 250));
       
       setTargetPos({ x: rx, y: ry });
       setFacingRight(rx > pos.x);
@@ -520,8 +559,8 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
       setMood('peeking');
       setFacingRight(true);
       return;
-    } else if (pos.x > window.scrollX + window.innerWidth - 110) {
-      setPos(p => ({ ...p, x: window.scrollX + window.innerWidth - 110 }));
+    } else if (pos.x > window.innerWidth - 110) {
+      setPos(p => ({ ...p, x: window.innerWidth - 110 }));
       setMood('peeking');
       setFacingRight(false);
       return;
@@ -535,7 +574,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
     }
     
     // Check if dropped at top right for Dark Mode switch
-    if (pos.x > window.scrollX + window.innerWidth - 200 && pos.y < window.scrollY + 150) {
+    if (pos.x > window.innerWidth - 200 && pos.y < 150) {
       toggleTheme();
       setMood('excited');
       soundFx.playCoin();
@@ -559,8 +598,8 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
       const throwDuration = 500;
       const startX = pos.x;
       const startY = pos.y;
-      const targetX = Math.max(window.scrollX, Math.min(window.scrollX + window.innerWidth - 100, startX + avgVx * throwDuration));
-      const targetY = window.scrollY + window.innerHeight - 150; 
+      const targetX = Math.max(0, Math.min(window.innerWidth - 100, startX + avgVx * throwDuration));
+      const targetY = window.innerHeight - 150;
       
       let startTime = performance.now();
       const throwAnim = (time: number) => {
@@ -654,15 +693,47 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
 
       <div 
         id="mascot-container"
-        className="absolute z-50 select-none touch-none"
+        className="fixed z-[99999] select-none touch-none"
         style={{ 
           left: pos.x,
           top: pos.y,
+          transition: isThemeJumping 
+            ? (themeJumpPhase === 'jumping' 
+               ? 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)' 
+               : 'all 1.5s cubic-bezier(0.5, 0, 0.1, 1)')
+            : 'none',
           width: 200,
           height: 240
         }}
       >
+        {/* The Curtain Attached ABOVE Bombom */}
+        {isThemeJumping && (
+          <div 
+            className={`absolute bottom-full left-1/2 -translate-x-1/2 w-[200vw] flex flex-col items-center justify-end overflow-hidden ${
+              curtainTargetTheme === 'dark'
+                ? 'border-b-[8px] border-slate-700' 
+                : 'border-b-[8px] border-slate-400'
+            }`}
+            style={{ 
+              height: '200vh', // extra tall to ensure no gaps
+              boxShadow: '0 40px 80px rgba(0,0,0,0.6)',
+              backgroundImage: `repeating-linear-gradient(to bottom, transparent, transparent 16px, rgba(0,0,0,0.15) 17px, rgba(0,0,0,0.3) 20px), linear-gradient(to bottom, ${
+                curtainTargetTheme === 'dark' ? '#0f172a, #020617' : '#f8fafc, #cbd5e1'
+              })`
+            }}
+          >
+            {/* The Rope */}
+            <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-2.5 h-40 rounded shadow-xl translate-y-24 border ${
+              curtainTargetTheme === 'dark' ? 'bg-amber-900 border-amber-950' : 'bg-amber-600 border-amber-800'
+            }`}>
+              {/* Rope Handle/Knot */}
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-inherit border inherit shadow-md"></div>
+            </div>
+          </div>
+        )}
         <div className="relative w-full h-full group flex flex-col items-center justify-end">
+          
+
           
           {/* ── SPEECH BUBBLE ── */}
           <div 
@@ -686,17 +757,6 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
             {mood === 'charging' && 'Mengisi daya... ⚡'}
           </div>
           
-          {/* ── PET MODE TOGGLE ── */}
-          <div className="absolute top-24 left-1/2 transform translate-x-14 z-20">
-            <button 
-              onClick={(e) => { e.stopPropagation(); setIsPetMode(!isPetMode); }} 
-              className={`p-2 rounded-full backdrop-blur border shadow-md transition-all duration-300 ${isPetMode ? 'bg-amber-400 text-slate-900 border-amber-300 scale-110' : 'bg-white/50 text-slate-600 border-white/50 hover:bg-white/80 scale-100'}`}
-              title={isPetMode ? "Matikan Mode Pet (Laser)" : "Aktifkan Mode Pet (Laser)"}
-            >
-              🐾
-            </button>
-          </div>
-
           {/* ── 3D MODEL CANVAS ── */}
           <div
             ref={mascotRef}
