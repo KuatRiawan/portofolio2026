@@ -40,7 +40,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const fetchMessages = async () => {
       try {
         setIsLoadingMessages(true);
-        const res = await fetch('/api/messages');
+        // Cache bust the GET request so the browser doesn't return stale data
+        const res = await fetch('/api/messages?t=' + Date.now());
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data) && data.length > 0) {

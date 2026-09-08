@@ -13,6 +13,7 @@ export default async function handler(req: any, res: any) {
   try {
     if (req.method === 'GET') {
       const messages = await redis.get(GUESTBOOK_KEY);
+      res.setHeader('Cache-Control', 'no-store, max-age=0');
       return res.status(200).json(messages || []);
     }
 
