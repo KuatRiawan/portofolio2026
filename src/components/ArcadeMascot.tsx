@@ -129,7 +129,7 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
         <primitive 
           object={scene} 
           scale={3} 
-          position={[0, -0.4, 0]} 
+          position={[theme === 'dark' ? 0 : -99, -0.4, 0]} 
         />
       </group>
     </group>
