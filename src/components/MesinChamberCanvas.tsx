@@ -181,6 +181,12 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
 
   // Initialize ALL 15 Project Capsules resting ON THE FLOOR PILE
   useEffect(() => {
+    // When machine is reset (no caught projects), also reset caught guest tracking
+    if (caughtProjectIds.length === 0) {
+      caughtGuestIdsRef.current.clear();
+      guestMessagesCountRef.current = 0;
+    }
+
     const remainingProjects = projects.filter(
       (p) => !caughtProjectIds.includes(p.id) || grabbedProjectRef.current?.id === p.id
     );
