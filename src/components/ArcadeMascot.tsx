@@ -35,70 +35,78 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
     }
   }, [actions, theme]);
 
+  useEffect(() => {
+    if (scene) {
+      scene.traverse((node: any) => {
+        if (node.isMesh) {
+          if (theme === 'dark') {
+            // Dark mode uses Object_5 (Black)
+            if (node.name.startsWith('Object_5')) {
+              node.visible = true;
+              // Rotate root joint so it faces forwards
+              if (node.parent && node.parent.name.includes('rootJoint')) {
+                node.parent.rotation.y = Math.PI;
+              }
+            } else {
+              node.visible = false;
+            }
+          } else {
+            // Light mode uses Object_16 (White)
+            if (node.name.startsWith('Object_16')) {
+              node.visible = true;
+              // Object_16 is modeled facing backwards, so we rotate its root joint
+              if (node.parent && node.parent.name.includes('rootJoint')) {
+                node.parent.rotation.y = Math.PI;
+              }
+            } else {
+              node.visible = false;
+            }
+          }
+        }
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [theme, scene]);
 
   useFrame((state, delta) => {
     if (!group.current) return;
     
-    // Smooth target rotations
     const targetRotation = new THREE.Euler(0, 0, 0);
-    const targetPosition = new THREE.Vector3(0, -0.4, 0); // Base position - adjusted to center model better
+    const targetPosition = new THREE.Vector3(0, -0.4, 0);
     const time = state.clock.getElapsedTime();
 
     // Base looking direction (eyeOffset gives us dx/dy based on cursor)
     targetRotation.y = (eyeOffset.dx / 10) * 0.3;
-    targetRotation.x = (eyeOffset.dy / 10) * 0.2;
+    targetRotation.x = (eyeOffset.dy / 10) * 0.3;
 
     if (isDragging) {
-      targetRotation.z = Math.sin(time * 15) * 0.2; // Wiggle when dragged
-      targetRotation.x += 0.2;
-      targetPosition.y = 0; // Lift up slightly
+      targetPosition.y = 0.5;
+      targetRotation.x = 0.2;
     } else if (isFalling) {
-      targetRotation.z = time * 10; // Spin while falling!
+      targetPosition.y = THREE.MathUtils.lerp(group.current.position.y, -0.4, delta * 10);
+      targetRotation.x = -0.1;
     } else if (isWalking) {
-      // Face the direction of walking
+      targetPosition.y = -0.4 + Math.abs(Math.sin(time * 10)) * 0.1;
       targetRotation.y += facingRight ? Math.PI / 2 : -Math.PI / 2;
-      // Very strong bobbing and waddling animation so it's obviously moving
-      targetPosition.y = -0.4 + Math.abs(Math.sin(time * 15)) * 0.3;
-      targetRotation.z = Math.sin(time * 15) * 0.4; // Rock side to side strongly
-      targetRotation.x = Math.sin(time * 15) * 0.1; // Lean forward/back
-    } else if (mood === 'sleepy' || mood === 'charging') {
-      targetRotation.x = 0.3; // Nodding off
-      targetPosition.y = -0.6;
+    } else if (mood === 'sad') {
+      targetRotation.x = 0.5;
     } else if (mood === 'dizzy') {
       targetRotation.y = time * 5; // Spin slowly
     } else if (mood === 'excited' || mood === 'waving') {
       targetPosition.y = -0.4 + Math.abs(Math.sin(time * 15)) * 0.2;
       targetRotation.x = -0.2;
     }
+
     // Apply rotation smoothing
     group.current.rotation.y = THREE.MathUtils.lerp(group.current.rotation.y, targetRotation.y, delta * 5);
     group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, targetRotation.x, delta * 5);
-    group.current.rotation.z = THREE.MathUtils.lerp(group.current.rotation.z, targetRotation.z, delta * 5);
     
     // Apply position smoothing
-    group.current.position.y = THREE.MathUtils.lerp(group.current.position.y, targetPosition.y, delta * 8);
+    group.current.position.y = THREE.MathUtils.lerp(group.current.position.y, targetPosition.y, delta * 5);
 
-    // Dynamic facial expressions based on mood (MorphTargets) and Colors
+    // Dynamic facial expressions based on mood (MorphTargets)
     scene.traverse((node: any) => {
-      // v2 has multiple meshes, hide the green/monocle ones if we are in light mode
-      if (node.isMesh) {
-        if (theme === 'dark') {
-          // Show monocle (Object_16), hide others
-          if (node.name.startsWith('Object_16')) {
-            node.visible = true;
-          } else {
-            node.visible = false;
-          }
-        } else {
-          // Show normal white (Object_5), hide others
-          if (node.name.startsWith('Object_5')) {
-            node.visible = true; 
-          } else {
-            node.visible = false;
-          }
-        }
-      }
-      
+
       if (node.isMesh && node.morphTargetInfluences) {
         // Reset all morphs
         for(let i=0; i<node.morphTargetInfluences.length; i++) {
