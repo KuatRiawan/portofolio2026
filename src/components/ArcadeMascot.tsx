@@ -124,7 +124,7 @@ useGLTF.preload('/Karakter/white_mascot_fixed.glb');
 
 export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
   const { theme, toggleTheme } = useApp();
-  const [isPetMode, setIsPetMode] = useState(false);
+
   // ─── STATE ───
   const [mood, setMood] = useState<MascotMood>('happy');
   const [isHovered, setIsHovered] = useState(false);
@@ -367,14 +367,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!mascotRef.current || isDragging || isFalling || isRecovering) return;
       
-      if (isPetMode) {
-         const distanceToCursor = Math.sqrt(Math.pow(e.pageX - 100 - pos.x, 2) + Math.pow(e.pageY - 120 - pos.y, 2));
-         if (distanceToCursor > 100) {
-           setTargetPos({ x: e.pageX - 100, y: e.pageY - 120 });
-           setIsWalking(true);
-           setMood('happy');
-         }
-      } else if (isWalking) {
+      if (isWalking) {
          return;
       }
       
@@ -405,7 +398,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
     
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [isDragging, isFalling, isRecovering, isWalking, mood, facingRight, isPetMode, pos]);
+  }, [isDragging, isFalling, isRecovering, isWalking, mood, facingRight, pos]);
 
   // ─── Click-to-Walk ───
   useEffect(() => {
