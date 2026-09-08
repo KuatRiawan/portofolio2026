@@ -12,6 +12,7 @@ interface AppContextType {
   toggleLang: () => void;
   t: typeof translations['id'];
   guestMessages: GuestMessage[];
+  isLoadingMessages: boolean;
   addGuestMessage: (msg: GuestMessage) => void;
   removeGuestMessage: (id: string) => void;
 }
@@ -31,26 +32,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return (saved === 'en' || saved === 'id') ? saved : 'id';
   });
 
-  const [guestMessages, setGuestMessages] = useState<GuestMessage[]>(() => {
-    const saved = localStorage.getItem('app_guest_messages');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return [];
-      }
-    }
-    // Default seed messages for empty state
-    return [
-      { id: 'guest-init-1', name: 'John Doe', message: 'Wah UI mesin capitnya keren banget! Semangat terus mas Kuat 💪', color: '#f59e0b' },
-      { id: 'guest-init-2', name: 'UI/UX Tester', message: 'Animasi 3D-nya smooth, detail shadow-nya dapet. Nice work!', color: '#ec4899' },
-      { id: 'guest-init-3', name: 'HR Recruiter', message: 'CV yang sangat interaktif dan out of the box!', color: '#3b82f6' }
-    ];
-  });
+  const [guestMessages, setGuestMessages] = useState<GuestMessage[]>([]);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(true);
 
+  // Fetch messages from Vercel Serverless API on mount
   useEffect(() => {
-    localStorage.setItem('app_guest_messages', JSON.stringify(guestMessages));
-  }, [guestMessages]);
+    const fetchMessages = async () => {
+      try {
+        setIsLoadingMessages(true);
+        const res = await fetch('/api/messages');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setGuestMessages(data);
+          } else {
+            // Seed with mock messages if DB is empty
+            setGuestMessages([
+              { id: 'guest-init-1', name: 'John Doe', message: 'Wah UI mesin capitnya keren banget! Semangat terus mas Kuat 💪', color: '#f59e0b' },
+              { id: 'guest-init-2', name: 'UI/UX Tester', message: 'Animasi 3D-nya smooth, detail shadow-nya dapet. Nice work!', color: '#ec4899' },
+              { id: 'guest-init-3', name: 'HR Recruiter', message: 'CV yang sangat interaktif dan out of the box!', color: '#3b82f6' }
+            ]);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      } finally {
+        setIsLoadingMessages(false);
+      }
+    };
+    
+    fetchMessages();
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('app_theme', theme);
@@ -82,18 +94,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setLangState((prev) => (prev === 'id' ? 'en' : 'id'));
   };
 
-  const addGuestMessage = (msg: GuestMessage) => {
+  const addGuestMessage = async (msg: GuestMessage) => {
+    // Optimistic UI update
     setGuestMessages((prev) => [...prev, msg]);
+    
+    // Save to DB
+    try {
+      await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg })
+      });
+    } catch (e) {
+      console.error('Failed to save message', e);
+    }
   };
 
-  const removeGuestMessage = (id: string) => {
+  const removeGuestMessage = async (id: string) => {
+    // Optimistic UI update
     setGuestMessages((prev) => prev.filter(msg => msg.id !== id));
+    
+    // Delete from DB
+    try {
+      await fetch('/api/messages', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+    } catch (e) {
+      console.error('Failed to delete message', e);
+    }
   };
 
   const t = translations[lang];
 
   return (
-    <AppContext.Provider value={{ theme, toggleTheme, lang, setLang, toggleLang, t, guestMessages, addGuestMessage, removeGuestMessage }}>
+    <AppContext.Provider value={{ theme, toggleTheme, lang, setLang, toggleLang, t, guestMessages, isLoadingMessages, addGuestMessage, removeGuestMessage }}>
       {children}
     </AppContext.Provider>
   );
