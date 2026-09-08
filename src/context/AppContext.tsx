@@ -37,18 +37,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
 
-  // Fetch messages from Vercel Serverless API on mount
+  // Fetch messages from Vercel Serverless API on mount and setup polling
   useEffect(() => {
-    const fetchMessages = async () => {
+    const fetchMessages = async (isInitial = false) => {
       try {
-        setIsLoadingMessages(true);
+        if (isInitial) setIsLoadingMessages(true);
         // Cache bust the GET request so the browser doesn't return stale data
         const res = await fetch('/api/messages?t=' + Date.now());
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data) && data.length > 0) {
-            setGuestMessages(data);
-          } else {
+            setGuestMessages((prev) => {
+              // Prevent unnecessary re-renders if data hasn't changed
+              if (prev.length !== data.length || JSON.stringify(prev) !== JSON.stringify(data)) {
+                return data;
+              }
+              return prev;
+            });
+          } else if (isInitial) {
             // Seed with mock messages if DB is empty
             setGuestMessages([
               { id: 'guest-init-1', name: 'John Doe', message: 'Wah UI mesin capitnya keren banget! Semangat terus mas Kuat 💪', color: '#f59e0b' },
@@ -59,13 +65,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       } catch (error: any) {
         console.error('Error fetching messages:', error);
-        setApiError('GET ERROR: ' + error.message);
+        if (isInitial) setApiError('GET ERROR: ' + error.message);
       } finally {
-        setIsLoadingMessages(false);
+        if (isInitial) setIsLoadingMessages(false);
       }
     };
     
-    fetchMessages();
+    fetchMessages(true);
+    
+    // Poll for new messages every 10 seconds to support real-time updates
+    const intervalId = setInterval(() => {
+      fetchMessages(false);
+    }, 10000);
+    
+    return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
