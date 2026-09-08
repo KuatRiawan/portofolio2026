@@ -43,10 +43,6 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
             // Dark mode uses Object_5 (Black)
             if (node.name.startsWith('Object_5')) {
               node.visible = true;
-              // Rotate root joint so it faces forwards
-              if (node.parent && node.parent.name.includes('rootJoint')) {
-                node.parent.rotation.y = Math.PI;
-              }
             } else {
               node.visible = false;
             }
@@ -54,10 +50,6 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
             // Light mode uses Object_16 (White)
             if (node.name.startsWith('Object_16')) {
               node.visible = true;
-              // Object_16 is modeled facing backwards, so we rotate its root joint
-              if (node.parent && node.parent.name.includes('rootJoint')) {
-                node.parent.rotation.y = Math.PI;
-              }
             } else {
               node.visible = false;
             }
@@ -135,7 +127,7 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
   return (
     <group ref={group} dispose={null}>
       {/* Adjusted scale so it fits nicely on the screen */}
-      <group rotation={[0, theme === 'dark' ? Math.PI : 0, 0]}>
+      <group rotation={[0, 0, 0]}>
         <primitive object={scene} scale={3} position={[0, -0.4, 0]} />
       </group>
     </group>
