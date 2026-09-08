@@ -54,3 +54,10 @@ export interface CapsulePhysics {
   pulsePhase: number;
   isGrabbed: boolean;
 }
+
+export interface GuestMessage {
+  id: string;
+  name: string;
+  message: string;
+  color: string;
+}

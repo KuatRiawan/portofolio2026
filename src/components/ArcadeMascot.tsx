@@ -130,6 +130,9 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [nearbyElementContext, setNearbyElementContext] = useState<string | null>(null);
   
+  // Accessories State
+  const [accessory, setAccessory] = useState<'none' | 'helmet' | 'glasses' | 'labcoat'>('none');
+  
   // Position & Movement
   const [pos, setPos] = useState({ x: -1000, y: -1000 }); 
   const [targetPos, setTargetPos] = useState<{x: number, y: number} | null>(null);
@@ -748,6 +751,31 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
             {mood === 'sitting' && 'Lagi istirahat bentar...'}
             {mood === 'waving' && 'Aduuh, sentuhan kamu bikin sumbu aku makin panas...'}
             {mood === 'charging' && 'Mengisi daya... ⚡'}
+
+            {/* Accessory Toggles inside the speech bubble when hovered */}
+            <div className={`mt-2 pt-2 border-t flex items-center justify-center gap-2 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setAccessory(prev => prev === 'helmet' ? 'none' : 'helmet'); }}
+                className={`p-1.5 rounded-lg border shadow-sm transition-all ${accessory === 'helmet' ? 'bg-amber-100 border-amber-400 scale-110' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
+                title="Helm Proyek K3"
+              >
+                👷
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setAccessory(prev => prev === 'glasses' ? 'none' : 'glasses'); }}
+                className={`p-1.5 rounded-lg border shadow-sm transition-all ${accessory === 'glasses' ? 'bg-slate-200 border-slate-500 scale-110' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
+                title="Kacamata Hacker"
+              >
+                🕶️
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setAccessory(prev => prev === 'labcoat' ? 'none' : 'labcoat'); }}
+                className={`p-1.5 rounded-lg border shadow-sm transition-all ${accessory === 'labcoat' ? 'bg-cyan-100 border-cyan-400 scale-110' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
+                title="Jas Lab AI"
+              >
+                🥼
+              </button>
+            </div>
           </div>
           
           {/* ── 3D MODEL CANVAS ── */}
@@ -787,6 +815,44 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
               {/* Subtle drop shadow underneath the 3D model */}
               <ContactShadows position={[0, -0.6, 0]} opacity={0.4} scale={5} blur={2} far={4} />
             </Canvas>
+
+            {/* 2D SVG Overlays for Accessories (Absolutely positioned over Canvas) */}
+            <div className="absolute inset-0 pointer-events-none flex items-center justify-center" style={{ transform: `translateY(${isWalking ? -10 : isDragging ? -40 : isFalling ? 20 : 0}px)` }}>
+              {accessory === 'helmet' && (
+                <svg width="120" height="80" viewBox="0 0 100 100" className="absolute top-[25%] drop-shadow-lg transition-transform duration-300" style={{ transform: `rotate(${eyeOffset.dx * 0.1}deg) translateX(${eyeOffset.dx * 0.5}px)` }}>
+                  {/* Yellow Hard Hat */}
+                  <path d="M 10,60 Q 50,10 90,60 L 95,60 Q 98,60 98,65 Q 98,70 90,70 L 10,70 Q 2,70 2,65 Q 2,60 5,60 Z" fill="#fbbf24" stroke="#b45309" strokeWidth="3"/>
+                  {/* Hat Ridge */}
+                  <path d="M 45,60 L 45,30 Q 50,25 55,30 L 55,60 Z" fill="#f59e0b" stroke="#b45309" strokeWidth="2"/>
+                </svg>
+              )}
+              {accessory === 'glasses' && (
+                <svg width="100" height="40" viewBox="0 0 100 40" className="absolute top-[48%] drop-shadow-md transition-transform duration-300" style={{ transform: `rotate(${eyeOffset.dx * 0.1}deg) translateX(${eyeOffset.dx * 0.8}px)` }}>
+                  {/* Pixelated Hacker Glasses */}
+                  <path d="M 10,15 L 45,15 L 45,25 L 35,25 L 35,35 L 20,35 L 20,25 L 10,25 Z" fill="#111827"/>
+                  <path d="M 55,15 L 90,15 L 90,25 L 80,25 L 80,35 L 65,35 L 65,25 L 55,25 Z" fill="#111827"/>
+                  {/* Bridge */}
+                  <rect x="45" y="15" width="10" height="5" fill="#111827"/>
+                  {/* Glare */}
+                  <rect x="15" y="18" width="8" height="4" fill="#ffffff" opacity="0.8"/>
+                  <rect x="60" y="18" width="8" height="4" fill="#ffffff" opacity="0.8"/>
+                </svg>
+              )}
+              {accessory === 'labcoat' && (
+                <svg width="160" height="120" viewBox="0 0 160 120" className="absolute top-[58%] drop-shadow-lg transition-transform duration-300" style={{ transform: `translateX(${eyeOffset.dx * 0.3}px)` }}>
+                  {/* White Lab Coat Lapels */}
+                  <path d="M 40,20 L 70,60 L 70,110 L 30,110 L 20,80 Z" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="3"/>
+                  <path d="M 120,20 L 90,60 L 90,110 L 130,110 L 140,80 Z" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="3"/>
+                  {/* Collar */}
+                  <path d="M 40,20 L 60,40 L 75,20 Z" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="2"/>
+                  <path d="M 120,20 L 100,40 L 85,20 Z" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="2"/>
+                  {/* Pocket */}
+                  <rect x="35" y="75" width="20" height="25" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2" rx="2"/>
+                  <path d="M 40,75 L 40,85" stroke="#3b82f6" strokeWidth="2"/> {/* Blue pen */}
+                  <path d="M 45,75 L 45,82" stroke="#ef4444" strokeWidth="2"/> {/* Red pen */}
+                </svg>
+              )}
+            </div>
           </div>
         </div>
       </div>

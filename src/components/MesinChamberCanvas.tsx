@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import type { ProjectCapsule, ClawState } from '../types/portfolio';
+import type { ProjectCapsule, ClawState, GuestMessage } from '../types/portfolio';
+import { useApp } from '../context/AppContext';
 import { soundFx } from '../services/soundEffects';
 
 interface ItemPhysics {
@@ -10,7 +11,9 @@ interface ItemPhysics {
   vy: number;
   baseRotation: number;
   rotationVel: number;
-  project: ProjectCapsule;
+  type: 'project' | 'guest';
+  project?: ProjectCapsule;
+  guestMessage?: GuestMessage;
 }
 
 interface MesinChamberCanvasProps {
@@ -45,6 +48,9 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
 
   const clawStateRef = useRef<ClawState>(clawState);
   const grabbedProjectRef = useRef<ProjectCapsule | null>(null);
+
+  const { guestMessages } = useApp();
+  const guestMessagesCountRef = useRef(guestMessages.length);
 
   // Helper to request iOS Motion & Orientation permissions on user interaction
   const requestSensorPermission = () => {
@@ -146,7 +152,15 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
       grabbedProjectRef.current = null;
       clawStateRef.current.hasCapsule = false;
       clawStateRef.current.grabbedCapsuleId = null;
-      onCapsuleCaught(proj);
+      
+      if ('message' in proj) {
+        // Caught a guest message
+        setTimeout(() => {
+          alert(`Pesan Tamu ditangkap!\nDari: ${(proj as any).name}\n\n"${(proj as any).message}"`);
+        }, 500);
+      } else {
+        onCapsuleCaught(proj as ProjectCapsule);
+      }
     }
   }, [clawState, onCapsuleCaught]);
 
@@ -182,12 +196,37 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
         vy: 0,
         baseRotation: (idx % 2 === 0 ? 1 : -1) * (0.04 + (idx % 3) * 0.03),
         rotationVel: 0,
+        type: 'project' as const,
         project: proj
       };
     });
 
     itemsRef.current = updatedItems;
   }, [projects, caughtIdsKey]);
+
+  // Handle new guest messages dropping in
+  useEffect(() => {
+    if (guestMessages.length > guestMessagesCountRef.current) {
+      const newMessages = guestMessages.slice(guestMessagesCountRef.current);
+      
+      newMessages.forEach((msg) => {
+        itemsRef.current.push({
+          id: msg.id,
+          x: 0.3 + Math.random() * 0.4,
+          y: -0.1, // Drop from above
+          vx: (Math.random() - 0.5) * 0.05,
+          vy: 0,
+          baseRotation: Math.random() * Math.PI,
+          rotationVel: (Math.random() - 0.5) * 0.2,
+          type: 'guest',
+          guestMessage: msg
+        });
+      });
+      
+      guestMessagesCountRef.current = guestMessages.length;
+      soundFx.playMoveWhirr(); // Sound when dropping
+    }
+  }, [guestMessages]);
 
   // Handle SHAKE event trigger (KOCOK MESIN button)
   useEffect(() => {
@@ -407,7 +446,9 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
           ctx.rotate(item.baseRotation);
 
           const capRad = radius + 1;
-          const themeColor = getVibrantColor(idx, item.project.color);
+          const themeColor = item.type === 'guest' && item.guestMessage 
+            ? item.guestMessage.color 
+            : getVibrantColor(idx, item.project?.color);
 
           // 1. TOP HALF DOME - High-Gloss Vibrant Color Plastic
           ctx.fillStyle = themeColor;
@@ -415,8 +456,8 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
           ctx.arc(0, 0, capRad, Math.PI, Math.PI * 2);
           ctx.fill();
 
-          // 2. BOTTOM HALF DOME - High-Gloss Pearl White Plastic
-          ctx.fillStyle = '#f8fafc';
+          // 2. BOTTOM HALF DOME - High-Gloss Pearl White Plastic (or Gold for Guest)
+          ctx.fillStyle = item.type === 'guest' ? '#fef08a' : '#f8fafc';
           ctx.beginPath();
           ctx.arc(0, 0, capRad, 0, Math.PI);
           ctx.fill();
@@ -453,6 +494,16 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
           ctx.beginPath();
           ctx.ellipse(-capRad * 0.3, -capRad * 0.5, capRad * 0.4, capRad * 0.15, -0.35, 0, Math.PI * 2);
           ctx.fill();
+          
+          // 6. Guest Message Initials
+          if (item.type === 'guest' && item.guestMessage) {
+            ctx.fillStyle = '#0f172a';
+            ctx.font = '900 11px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const initials = item.guestMessage.name.substring(0, 2).toUpperCase();
+            ctx.fillText(initials, 0, capRad * 0.45);
+          }
 
           ctx.restore();
 
@@ -461,7 +512,11 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
           if (currentClawState.isGrabbing && currentClawState.isLowering && !currentClawState.hasCapsule && distToClaw < 55) {
             currentClawState.hasCapsule = true;
             currentClawState.grabbedCapsuleId = item.id;
-            grabbedProjectRef.current = item.project;
+            // Hack for now: if guest, we don't have project. Let's pass a dummy or prevent grab.
+            // But we actually WANT them to grab the guest message!
+            // Wait, grabbedProjectRef is typed as ProjectCapsule | null. 
+            // We can just set grabbedProjectRef.current = item.project || (item.guestMessage as any);
+            grabbedProjectRef.current = item.project || (item.guestMessage as any);
             
             // LOCK Y IMMEDIATELY to current smooth claw Y so it CANNOT continue moving down!
             currentClawState.y = smoothClawRef.current.y;

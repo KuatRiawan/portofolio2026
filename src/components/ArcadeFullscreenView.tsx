@@ -4,6 +4,7 @@ import type { ProjectCapsule, ClawState } from '../types/portfolio';
 import { MesinHeader } from './MesinHeader';
 import { MesinChamberCanvas } from './MesinChamberCanvas';
 import { MesinControlPanel } from './MesinControlPanel';
+import { GuestbookModal } from './GuestbookModal';
 import { useApp } from '../context/AppContext';
 
 interface ArcadeFullscreenViewProps {
@@ -38,8 +39,10 @@ export const ArcadeFullscreenView: React.FC<ArcadeFullscreenViewProps> = ({
   onToggleAudio
 }) => {
   const [shakeCount, setShakeCount] = useState(0);
-  const { theme, toggleTheme, lang, toggleLang, t } = useApp();
+  const { theme, toggleTheme, lang, toggleLang, t, addGuestMessage } = useApp();
   const isLight = theme === 'light';
+  
+  const [isGuestbookOpen, setIsGuestbookOpen] = useState(false);
 
   const handleShake = () => {
     setShakeCount((prev) => prev + 1);
@@ -131,6 +134,7 @@ export const ArcadeFullscreenView: React.FC<ArcadeFullscreenViewProps> = ({
           {/* Header */}
           <MesinHeader
             onOpenDeskripsiKarya={onOpenDeskripsiKarya}
+            onOpenGuestbook={() => setIsGuestbookOpen(true)}
             onResetMachine={onResetMachine}
           />
 
@@ -176,6 +180,24 @@ export const ArcadeFullscreenView: React.FC<ArcadeFullscreenViewProps> = ({
         <span className="sm:hidden">Gunakan Joystick untuk mengarahkan Capit. Tekan CAPIT untuk menangkap bola!</span>
         <span className="hidden sm:inline">{t.cabinetInstruction}</span>
       </footer>
+
+      {/* Guestbook Modal */}
+      {isGuestbookOpen && (
+        <GuestbookModal 
+          onClose={() => setIsGuestbookOpen(false)}
+          onSubmit={(name, message) => {
+            const colors = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            addGuestMessage({
+              id: `guest-${Date.now()}`,
+              name,
+              message,
+              color: randomColor
+            });
+            setIsGuestbookOpen(false);
+          }}
+        />
+      )}
 
     </div>
   );

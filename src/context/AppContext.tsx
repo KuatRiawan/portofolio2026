@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { translations, type Language } from '../i18n/translations';
+import type { GuestMessage } from '../types/portfolio';
 
 export type Theme = 'dark' | 'light';
 
@@ -10,6 +11,8 @@ interface AppContextType {
   setLang: (lang: Language) => void;
   toggleLang: () => void;
   t: typeof translations['id'];
+  guestMessages: GuestMessage[];
+  addGuestMessage: (msg: GuestMessage) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -26,6 +29,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const saved = localStorage.getItem('app_lang');
     return (saved === 'en' || saved === 'id') ? saved : 'id';
   });
+
+  const [guestMessages, setGuestMessages] = useState<GuestMessage[]>([]);
 
   useEffect(() => {
     localStorage.setItem('app_theme', theme);
@@ -57,10 +62,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setLangState((prev) => (prev === 'id' ? 'en' : 'id'));
   };
 
+  const addGuestMessage = (msg: GuestMessage) => {
+    setGuestMessages((prev) => [...prev, msg]);
+  };
+
   const t = translations[lang];
 
   return (
-    <AppContext.Provider value={{ theme, toggleTheme, lang, setLang, toggleLang, t }}>
+    <AppContext.Provider value={{ theme, toggleTheme, lang, setLang, toggleLang, t, guestMessages, addGuestMessage }}>
       {children}
     </AppContext.Provider>
   );
