@@ -54,11 +54,6 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
           }
         }
       });
-
-      // The white character (Object_16) is offset by +33 in the GLB file.
-      // The black character (Object_5) is at 0.
-      // We apply the exact negative offset to the local scene to center them identically.
-      scene.position.x = theme === 'dark' ? 0 : -33;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [theme, scene]);
