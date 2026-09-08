@@ -53,6 +53,8 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
 
   const { guestMessages } = useApp();
   const guestMessagesCountRef = useRef(guestMessages.length);
+  // Track which guest message IDs have already been caught so they don't reappear
+  const caughtGuestIdsRef = useRef<Set<string>>(new Set());
 
   // Helper to request iOS Motion & Orientation permissions on user interaction
   const requestSensorPermission = () => {
@@ -156,6 +158,8 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
       clawStateRef.current.grabbedCapsuleId = null;
       
       if ('message' in proj) {
+        // Mark this guest message as permanently caught so it won't reappear
+        caughtGuestIdsRef.current.add(proj.id);
         // Remove from canvas items
         itemsRef.current = itemsRef.current.filter((item) => item.id !== proj.id);
         
@@ -216,7 +220,7 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
 
     // Add guest messages that exist in state but aren't in the canvas yet (happens if fetched before mount)
     const initialGuestItems = guestMessages
-      .filter(msg => !existingGuestIds.has(msg.id))
+      .filter(msg => !existingGuestIds.has(msg.id) && !caughtGuestIdsRef.current.has(msg.id))
       .map((msg) => ({
         id: msg.id,
         x: Math.max(0.2, Math.min(0.8, 0.2 + Math.random() * 0.6)),
@@ -484,8 +488,8 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
           ctx.arc(0, 0, capRad, Math.PI, Math.PI * 2);
           ctx.fill();
 
-          // 2. BOTTOM HALF DOME - High-Gloss Pearl White Plastic (or Gold for Guest)
-          ctx.fillStyle = item.type === 'guest' ? '#fef08a' : '#f8fafc';
+          // 2. BOTTOM HALF DOME - High-Gloss Pearl White Plastic
+          ctx.fillStyle = '#f8fafc';
           ctx.beginPath();
           ctx.arc(0, 0, capRad, 0, Math.PI);
           ctx.fill();
@@ -498,26 +502,24 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
           ctx.stroke();
 
           // 3. CENTER BLACK SEAM BAND
-          if (item.type !== 'guest') {
-            ctx.fillStyle = '#0f172a';
-            ctx.fillRect(-capRad + 1, -3, (capRad - 1) * 2, 6);
+          ctx.fillStyle = '#0f172a';
+          ctx.fillRect(-capRad + 1, -3, (capRad - 1) * 2, 6);
 
-            // 4. CENTER METALLIC SILVER PUSH-BUTTON
-            ctx.fillStyle = '#0f172a';
-            ctx.beginPath();
-            ctx.arc(0, 0, 7, 0, Math.PI * 2);
-            ctx.fill();
+          // 4. CENTER METALLIC SILVER PUSH-BUTTON
+          ctx.fillStyle = '#0f172a';
+          ctx.beginPath();
+          ctx.arc(0, 0, 7, 0, Math.PI * 2);
+          ctx.fill();
 
-            ctx.fillStyle = '#cbd5e1';
-            ctx.beginPath();
-            ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
-            ctx.fill();
+          ctx.fillStyle = '#cbd5e1';
+          ctx.beginPath();
+          ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+          ctx.fill();
 
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.arc(-1, -1, 1.5, 0, Math.PI * 2);
-            ctx.fill();
-          }
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(-1, -1, 1.5, 0, Math.PI * 2);
+          ctx.fill();
 
           // 5. Specular Crescent Arc Highlight
           ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
