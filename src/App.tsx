@@ -126,26 +126,54 @@ export function App() {
     });
   }, []);
 
-  // Keyboard navigation support (Arrow Keys, A/D, Spacebar)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-        handleClawMove(-0.06);
-        soundFx.playMoveWhirr();
-      } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-        handleClawMove(0.06);
-        soundFx.playMoveWhirr();
-      } else if (e.key === ' ' || e.key === 'Enter') {
-        e.preventDefault();
-        executeGrabSequence();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleClawMove]);
-
   const grabTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Trigger Claw Lower & Grab Sequence with smooth multi-phase animation
+  const executeGrabSequence = useCallback(() => {
+    setClawState((prev) => {
+      if (prev.isGrabbing) return prev;
+      soundFx.playGrabPulse();
+      return {
+        ...prev,
+        isGrabbing: true,
+        isLowering: true,
+        isOpen: true,
+        y: 0.76
+      };
+    });
+
+    // Step 2: If reaches floor without hitting high ball (850ms)
+    grabTimeoutRef.current = setTimeout(() => {
+      setClawState((prev) => ({
+        ...prev,
+        isOpen: false,
+        isLowering: false
+      }));
+
+      // Step 3: Raise claw back up to top Y: 0.15 (400ms pause + 800ms lift)
+      setTimeout(() => {
+        setClawState((prev) => ({
+          ...prev,
+          y: 0.15,
+          isRaising: true
+        }));
+
+        // Step 4: Move claw left to Prize Hatch X: 0.15 (800ms)
+        setTimeout(() => {
+          setClawState((prev) => ({
+            ...prev,
+            x: 0.15,
+            isRaising: false,
+            isGrabbing: false,
+            isOpen: true,
+            beamActive: false
+          }));
+        }, 800);
+
+      }, 500);
+
+    }, 850);
+  }, []);
 
   const handleClawHitBall = useCallback((hitY?: number) => {
     if (grabTimeoutRef.current) {
@@ -186,52 +214,46 @@ export function App() {
     }, 350);
   }, []);
 
-  // Trigger Claw Lower & Grab Sequence with smooth multi-phase animation
-  const executeGrabSequence = () => {
-    if (clawState.isGrabbing) return;
-    soundFx.playGrabPulse();
+  // Keyboard navigation support (Arrow Keys, A/D, Spacebar)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore keyboard controls when typing in an input/textarea or when a modal is open
+      const target = e.target as HTMLElement | null;
+      const activeEl = document.activeElement as HTMLElement | null;
+      const isInput = (el: HTMLElement | null) =>
+        Boolean(
+          el && (
+            el.tagName === 'INPUT' ||
+            el.tagName === 'TEXTAREA' ||
+            el.tagName === 'SELECT' ||
+            el.isContentEditable
+          )
+        );
 
-    // Step 1: Lower claw down to floor Y: 0.76
-    setClawState((prev) => ({
-      ...prev,
-      isGrabbing: true,
-      isLowering: true,
-      isOpen: true,
-      y: 0.76
-    }));
+      if (isInput(target) || isInput(activeEl)) {
+        return;
+      }
 
-    // Step 2: If reaches floor without hitting high ball (850ms)
-    grabTimeoutRef.current = setTimeout(() => {
-      setClawState((prev) => ({
-        ...prev,
-        isOpen: false,
-        isLowering: false
-      }));
+      // Ignore controls if any modal overlay is present
+      if (selectedProject || selectedGuestMessage || isRakCapitOpen || document.querySelector('.fixed.inset-0')) {
+        return;
+      }
 
-      // Step 3: Raise claw back up to top Y: 0.15 (400ms pause + 800ms lift)
-      setTimeout(() => {
-        setClawState((prev) => ({
-          ...prev,
-          y: 0.15,
-          isRaising: true
-        }));
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+        handleClawMove(-0.06);
+        soundFx.playMoveWhirr();
+      } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+        handleClawMove(0.06);
+        soundFx.playMoveWhirr();
+      } else if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        executeGrabSequence();
+      }
+    };
 
-        // Step 4: Move claw left to Prize Hatch X: 0.15 (800ms)
-        setTimeout(() => {
-          setClawState((prev) => ({
-            ...prev,
-            x: 0.15,
-            isRaising: false,
-            isGrabbing: false,
-            isOpen: true,
-            beamActive: false
-          }));
-        }, 800);
-
-      }, 500);
-
-    }, 850);
-  };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleClawMove, executeGrabSequence, selectedProject, selectedGuestMessage, isRakCapitOpen]);
 
   const handleCapsuleCaught = useCallback((project: ProjectCapsule) => {
     setCaughtProjects((prev) => {
