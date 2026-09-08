@@ -73,10 +73,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     
     fetchMessages(true);
     
-    // Poll for new messages every 10 seconds to support real-time updates
+    // Poll for new messages every 3 seconds for faster real-time updates
     const intervalId = setInterval(() => {
       fetchMessages(false);
-    }, 10000);
+    }, 3000);
     
     return () => clearInterval(intervalId);
   }, []);
