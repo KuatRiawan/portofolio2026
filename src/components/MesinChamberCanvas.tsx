@@ -212,9 +212,25 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
 
     // Preserve guest messages that are currently in the chamber
     const guestItems = itemsRef.current.filter((item) => item.type === 'guest');
+    const existingGuestIds = new Set(guestItems.map(g => g.id));
 
-    itemsRef.current = [...updatedItems, ...guestItems];
-  }, [projects, caughtIdsKey]);
+    // Add guest messages that exist in state but aren't in the canvas yet (happens if fetched before mount)
+    const initialGuestItems = guestMessages
+      .filter(msg => !existingGuestIds.has(msg.id))
+      .map((msg) => ({
+        id: msg.id,
+        x: Math.max(0.2, Math.min(0.8, 0.2 + Math.random() * 0.6)),
+        y: Math.max(0.5, Math.min(0.8, 0.5 + Math.random() * 0.3)),
+        vx: 0,
+        vy: 0,
+        baseRotation: Math.random() * Math.PI,
+        rotationVel: 0,
+        type: 'guest' as const,
+        guestMessage: msg
+      }));
+
+    itemsRef.current = [...updatedItems, ...guestItems, ...initialGuestItems];
+  }, [projects, caughtIdsKey]); // we deliberately don't add guestMessages here so it only runs on mount or project changes
 
   // Handle new guest messages dropping in
   useEffect(() => {

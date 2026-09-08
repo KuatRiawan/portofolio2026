@@ -41,7 +41,7 @@ export const ArcadeFullscreenView: React.FC<ArcadeFullscreenViewProps> = ({
   onToggleAudio
 }) => {
   const [shakeCount, setShakeCount] = useState(0);
-  const { theme, toggleTheme, lang, toggleLang, t, addGuestMessage } = useApp();
+  const { theme, toggleTheme, lang, toggleLang, t, apiError, addGuestMessage } = useApp();
   const isLight = theme === 'light';
   
   const [isGuestbookOpen, setIsGuestbookOpen] = useState(false);
@@ -180,8 +180,14 @@ export const ArcadeFullscreenView: React.FC<ArcadeFullscreenViewProps> = ({
       <footer className={`w-full max-w-4xl mx-auto text-center text-[10px] sm:text-xs font-mono py-2 px-3 ${
         isLight ? 'text-slate-600' : 'text-slate-400'
       }`}>
-        <span className="sm:hidden">Gunakan Joystick untuk mengarahkan Capit. Tekan CAPIT untuk menangkap bola!</span>
-        <span className="hidden sm:inline">{t.cabinetInstruction}</span>
+        {apiError ? (
+          <span className="text-red-500 font-bold bg-white/80 px-2 py-1 rounded inline-block">{apiError}</span>
+        ) : (
+          <>
+            <span className="sm:hidden">Gunakan Joystick untuk mengarahkan Capit. Tekan CAPIT untuk menangkap bola!</span>
+            <span className="hidden sm:inline">{t.cabinetInstruction}</span>
+          </>
+        )}
       </footer>
 
       {/* Guestbook Modal */}

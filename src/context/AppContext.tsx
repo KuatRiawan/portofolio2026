@@ -13,6 +13,7 @@ interface AppContextType {
   t: typeof translations['id'];
   guestMessages: GuestMessage[];
   isLoadingMessages: boolean;
+  apiError: string | null;
   addGuestMessage: (msg: GuestMessage) => void;
   removeGuestMessage: (id: string) => void;
 }
@@ -34,6 +35,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [guestMessages, setGuestMessages] = useState<GuestMessage[]>([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // Fetch messages from Vercel Serverless API on mount
   useEffect(() => {
@@ -57,7 +59,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       } catch (error: any) {
         console.error('Error fetching messages:', error);
-        alert('DEBUG GET ERROR: ' + error.message);
+        setApiError('GET ERROR: ' + error.message);
       } finally {
         setIsLoadingMessages(false);
       }
@@ -109,11 +111,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        alert('DEBUG POST ERROR: ' + res.status + ' ' + (errData.error || res.statusText));
+        setApiError('POST ERROR: ' + res.status + ' ' + (errData.error || res.statusText));
       }
     } catch (e: any) {
       console.error('Failed to save message', e);
-      alert('DEBUG POST EXCEPTION: ' + e.message);
+      setApiError('POST EXCEPTION: ' + e.message);
     }
   };
 
@@ -136,7 +138,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const t = translations[lang];
 
   return (
-    <AppContext.Provider value={{ theme, toggleTheme, lang, setLang, toggleLang, t, guestMessages, isLoadingMessages, addGuestMessage, removeGuestMessage }}>
+    <AppContext.Provider value={{ theme, toggleTheme, lang, setLang, toggleLang, t, guestMessages, isLoadingMessages, apiError, addGuestMessage, removeGuestMessage }}>
       {children}
     </AppContext.Provider>
   );
