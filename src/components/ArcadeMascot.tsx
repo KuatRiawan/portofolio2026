@@ -23,7 +23,8 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
 }) {
   const group = useRef<THREE.Group>(null);
   
-  const { scene, animations, nodes } = useGLTF('/Karakter/ssrbs_2.0_hololive.glb') as any;
+  const modelPath = theme === 'dark' ? '/Karakter/black_mascot.glb' : '/Karakter/white_mascot_fixed.glb';
+  const { scene, animations } = useGLTF(modelPath) as any;
   const { actions } = useAnimations(animations, group);
 
   useEffect(() => {
@@ -36,26 +37,7 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
   }, [actions, theme]);
 
   useEffect(() => {
-    if (scene) {
-      scene.traverse((node: any) => {
-        if (node.isMesh) {
-          if (theme === 'dark') {
-            if (node.name.startsWith('Object_5')) {
-              node.visible = true;
-            } else {
-              node.visible = false;
-            }
-          } else {
-            if (node.name.startsWith('Object_16')) {
-              node.visible = true;
-            } else {
-              node.visible = false;
-            }
-          }
-        }
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // No need to manually toggle visibility anymore since each file only contains one character!
   }, [theme, scene]);
 
   useFrame((state, delta) => {
@@ -115,8 +97,8 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
         else if (mood === 'waving') targetIndex = 8;
         
         if (targetIndex >= 0 && node.morphTargetInfluences && targetIndex < node.morphTargetInfluences.length) {
-           // Reduce intensity to 0.5 so it doesn't open its mouth too wide
-           node.morphTargetInfluences[targetIndex] = THREE.MathUtils.lerp(node.morphTargetInfluences[targetIndex] || 0, 0.5, delta * 15);
+           // Reduce intensity to 0.15 so it doesn't open its mouth too wide
+           node.morphTargetInfluences[targetIndex] = THREE.MathUtils.lerp(node.morphTargetInfluences[targetIndex] || 0, 0.15, delta * 15);
         }
       }
     });
@@ -129,7 +111,7 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
         <primitive 
           object={scene} 
           scale={3} 
-          position={[theme === 'dark' ? 0 : -99, -0.4, 0]} 
+          position={[0, -0.4, 0]} 
         />
       </group>
     </group>
@@ -137,7 +119,8 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
 }
 
 // Preload to avoid jitter
-useGLTF.preload('/Karakter/ssrbs_2.0_hololive.glb');
+useGLTF.preload('/Karakter/black_mascot.glb');
+useGLTF.preload('/Karakter/white_mascot_fixed.glb');
 
 export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
   const { theme, toggleTheme } = useApp();
@@ -156,30 +139,60 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
   // Cursor Tracking for Parallax
   const [eyeOffset, setEyeOffset] = useState({ dx: 0, dy: 0 });
 
-  const TEBAK_TEBAKAN = useMemo(() => [
-    "Benda apa yang kalau dibalik jadi rusak? ...Kasur! 😂",
-    "Kecil, hitam, keringetan? ...Semut lagi push up!",
-    "Kenapa nyamuk bunyinya nging? Karena dia nggak bisa ngong! 🦟",
-    "Ban apa yang enak dimakan? Bandeng presto dong~ 🐟",
-    "Sayur apa yang dingin? Kembang cold! 🥦",
-    "Pintu apa yang didorong sepuluh orang nggak kebuka? Pintu yang ada tulisannya 'Tarik'! 🚪",
-    "Hewan apa yang paling hening? Semute... 🤫",
-    "Cuaca lagi cerah nih, secerah masa depan kita! ✨",
-    "Semangat ya lihat portofolionya! Jangan lupa senyum! 😊",
-    "Udah minum air putih belum hari ini? 💧",
-    "Klik badanku buat melempar aku! Wusss~ 🚀",
-    "Kalau capek, istirahat ya! Jangan dipaksain... 🍵"
+  // Mascot Quotes categorized by interaction type
+  const IDLE_QUOTES = useMemo(() => [
+    "Ara-ara… Mau liat-liat portofolio\natau mau liat yang lain, Master?",
+    "Portofolio ini mengandung konten dewasa:\nDewasa-nya beban hidup.",
+    "Buka portofolio ini cuma boleh kalau umur\nkamu udah siap nanggung risiko ketagihan.",
+    "Yamkudasai! Jangan liat-liat terus,\nnanti ujungnya desah...",
+    "Irasshaimase~! Di sini semuanya polos,\nkecuali pikiran kamu.",
+    "Kok didiemin? Jarinya pegal ya,\natau udah keluar duluan?",
+    "Sentuh aku dong... Masa cuma diliatin,\nemang aku pajangan toko bagus?",
+    "Sumbu aku dingin nih, butuh\nsentuhan hangat dari jarimu... UwU"
   ], []);
 
-  const [currentQuote, setCurrentQuote] = useState(TEBAK_TEBAKAN[0]);
+  const SHAKE_QUOTES = useMemo(() => [
+    "Ah-ah-ah! Pelan-pelan kocoknya,\nnanti cairan aku basah!",
+    "Nnn~ Jangan dikocok terus,\nnanti keluar ledakan crot!",
+    "Kocok terus bang sampai berbusa! Kimochiii~!",
+    "Aduh pusing... Otak aku kocak,\nsumbu aku kocok!",
+    "Yamkudasai! Lu kira aku botol\nmarjan marjan-an dikocok-kocok?!",
+    "Ahn~ Goyangannya mantap,\nbikin sumbu aku makin tegang!"
+  ], []);
+  
+  const CLICK_QUOTES = useMemo(() => [
+    "AHNN! Jangan pengang daerah situ,\nsensitif!",
+    "Totolan ke-5 gratis desahan! Dameee~!",
+    "Sekali klik mendesah, dua kali\nklik meledak, tiga kali klik hamil!",
+    "Aduh jarinya liar banget,\nmau dipencet sampai crot ya?",
+    "Pencet aku Mas, pencet!\nJangan kasih kendor!",
+    "Kih-kimochi~ Terus Kak, di sebelah\nsitu agak geli sikit!"
+  ], []);
+
+  const DRAG_QUOTES = useMemo(() => [
+    "KYAAA~! Jangan diangkat,\naku gak pakai celana dalam!",
+    "Mau dibawa ke mana aku?!\nAku masih polos, belum siap dinikahi!",
+    "Pegangannya kenceng banget... Mau diajak\nmain di ranjang portofolio ya?",
+    "Lepasin! Nanti sumbu aku kepegang\nterus meledak di dalam (ruangan)!",
+    "Ara-ara... Tinggal angkat,\ngantung, lalu... ahhh~",
+    "Turunin aku! Nanti tumpah\nsemua benih-benih ke-asbun-an aku!"
+  ], []);
+
+  const [currentQuote, setCurrentQuote] = useState(IDLE_QUOTES[0]);
+  const [currentShakeQuote, setCurrentShakeQuote] = useState(SHAKE_QUOTES[0]);
+  const [currentClickQuote, setCurrentClickQuote] = useState(CLICK_QUOTES[0]);
+  const [currentDragQuote, setCurrentDragQuote] = useState(DRAG_QUOTES[0]);
 
   useEffect(() => {
-    const quoteInterval = setInterval(() => {
-      const randomIndex = Math.floor(Math.random() * TEBAK_TEBAKAN.length);
-      setCurrentQuote(TEBAK_TEBAKAN[randomIndex]);
-    }, 7000);
-    return () => clearInterval(quoteInterval);
-  }, [TEBAK_TEBAKAN]);
+    // Typing animation for idle quotes
+    const typingInterval = setInterval(() => {
+      if (mood === 'happy') {
+        const randomIndex = Math.floor(Math.random() * IDLE_QUOTES.length);
+        setCurrentQuote(IDLE_QUOTES[randomIndex]);
+      }
+    }, 5000);
+    return () => clearInterval(typingInterval);
+  }, [IDLE_QUOTES, mood]);
   
   // Dragging & Physics
   const [isDragging, setIsDragging] = useState(false);
@@ -284,14 +297,29 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
       lastScrollTime = currentTime;
     };
 
+    const handleMascotSpeak = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setNearbyElementContext(detail);
+      setMood('thinking');
+    };
+    
+    const handleMascotSpeakClear = () => {
+      setNearbyElementContext(null);
+      setMood('happy');
+    };
+
     window.addEventListener('resize', resizeHandler);
     window.addEventListener('scroll', scrollHandler);
+    window.addEventListener('mascot-speak', handleMascotSpeak);
+    window.addEventListener('mascot-speak-clear', handleMascotSpeakClear);
     
     resetIdleTimer();
     return () => {
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       window.removeEventListener('resize', resizeHandler);
       window.removeEventListener('scroll', scrollHandler);
+      window.removeEventListener('mascot-speak', handleMascotSpeak);
+      window.removeEventListener('mascot-speak-clear', handleMascotSpeakClear);
     };
   }, []);
 
@@ -435,6 +463,8 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
     mascotRef.current?.setPointerCapture(e.pointerId);
     soundFx.playMoveWhirr();
     setMood('surprised');
+    const randomDrag = Math.floor(Math.random() * DRAG_QUOTES.length);
+    setCurrentDragQuote(DRAG_QUOTES[randomDrag]);
     
     if (moodResetTimerRef.current) clearTimeout(moodResetTimerRef.current);
   };
@@ -464,6 +494,8 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
       
       if (shakeCount.current > 4) {
         setMood('dizzy');
+        const randomShake = Math.floor(Math.random() * SHAKE_QUOTES.length);
+        setCurrentShakeQuote(SHAKE_QUOTES[randomShake]);
       }
     }
     
@@ -576,6 +608,11 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
     if (isDragging || isWalking || isFalling) return;
     
     clickCount.current++;
+    
+    // Set a random click quote
+    const randomClick = Math.floor(Math.random() * CLICK_QUOTES.length);
+    setCurrentClickQuote(CLICK_QUOTES[randomClick]);
+    
     if (clickCount.current >= 3) {
       setMood('angry');
       soundFx.playGrabPulse();
@@ -629,23 +666,23 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
           
           {/* ── SPEECH BUBBLE ── */}
           <div 
-            className={`absolute top-12 bg-white/90 backdrop-blur text-slate-800 text-xs font-medium px-4 py-2 rounded-2xl rounded-bl-sm shadow-xl border border-white/50 transition-all duration-300 origin-bottom-left z-10 
-              ${(isHovered || mood === 'thinking' || mood === 'excited' || mood === 'angry') && !isDragging && !isFalling && !isPeeking ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}
+            className={`absolute top-12 bg-white/90 backdrop-blur text-slate-800 text-xs font-medium px-4 py-2 rounded-2xl rounded-bl-sm shadow-xl border border-white/50 transition-all duration-300 origin-bottom-left z-10 whitespace-pre-wrap text-center leading-relaxed
+              ${(isHovered || mood === 'thinking' || mood === 'excited' || mood === 'angry' || mood === 'surprised' || mood === 'dizzy') && !isPeeking ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}
             `}
             style={{ width: 'max-content', left: '75%' }}
           >
             {mood === 'happy' && currentQuote}
-            {mood === 'excited' && 'YAY! Keren banget! ✨'}
+            {mood === 'excited' && currentClickQuote}
             {mood === 'thinking' && (nearbyElementContext || 'Hmm... menarik nih 🤔')}
-            {mood === 'angry' && 'HENTIKAN! 💢'}
-            {mood === 'dizzy' && 'Pusing pusing pusing 😵‍💫'}
+            {mood === 'angry' && currentClickQuote}
+            {mood === 'dizzy' && currentShakeQuote}
             {mood === 'sad' && 'Jangan pergi... 💧'}
-            {mood === 'surprised' && 'WAAA! 😲'}
-            {mood === 'love' && 'Aku suka ini! ♥️'}
-            {mood === 'shy' && 'A-aku malu... 👉👈'}
+            {mood === 'surprised' && currentDragQuote}
+            {mood === 'love' && 'Sensasi kliknya enak banget... Terus, Kak, jangan berhenti!'}
+            {mood === 'shy' && 'Yamete! Kulit hitamku licin, nanti jarimu terpleset ke hati.'}
             {mood === 'sleepy' && 'Zzz... cape nih'}
             {mood === 'sitting' && 'Lagi istirahat bentar...'}
-            {mood === 'waving' && currentQuote}
+            {mood === 'waving' && 'Aduuh, sentuhan kamu bikin sumbu aku makin panas...'}
             {mood === 'charging' && 'Mengisi daya... ⚡'}
           </div>
           
@@ -671,7 +708,6 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
             onMouseLeave={handleMouseLeave}
             onClick={handleBellyClick}
             className="w-full h-full cursor-grab active:cursor-grabbing drop-shadow-[0_8px_16px_rgba(15,23,42,0.25)] z-10"
-            title="Penta Mascot 3D"
             style={{
                clipPath: isPeeking ? 'inset(0 0 0 50%)' : 'none',
                transform: isPeeking ? 'translateX(-30px)' : 'none'
@@ -684,6 +720,7 @@ export const ArcadeMascot: React.FC<ArcadeMascotProps> = () => {
               
               <Suspense fallback={null}>
                 <MascotModel 
+                  key={theme}
                   mood={mood}
                   isDragging={isDragging}
                   isFalling={isFalling}

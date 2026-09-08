@@ -53,6 +53,8 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({
         <div className="hidden md:flex items-center space-x-1 lg:space-x-3 xl:space-x-4 text-xs font-fredoka">
           <button
             onClick={() => onScrollToSection('hero')}
+            onMouseEnter={() => window.dispatchEvent(new CustomEvent('mascot-speak', { detail: 'Siapa Aku? Kucing Hitam Penggoda' }))}
+            onMouseLeave={() => window.dispatchEvent(new CustomEvent('mascot-speak-clear'))}
             className={`px-3 py-2 rounded-xl transition-colors flex items-center gap-1.5 ${
               isLight ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-100' : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
             }`}
@@ -63,6 +65,8 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({
 
           <button
             onClick={onOpenArcade}
+            onMouseEnter={() => window.dispatchEvent(new CustomEvent('mascot-speak', { detail: 'Koleksi Karya Paling Desah-ble' }))}
+            onMouseLeave={() => window.dispatchEvent(new CustomEvent('mascot-speak-clear'))}
             className="px-3 py-2 rounded-xl text-amber-500 hover:text-amber-600 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors flex items-center gap-1.5 font-bold"
           >
             <Gamepad2 className="w-4 h-4 text-amber-500 animate-bounce" />
@@ -163,6 +167,8 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({
             href="/CV_KUAT_RIAWAN.pdf"
             target="_blank"
             rel="noreferrer"
+            onMouseEnter={() => window.dispatchEvent(new CustomEvent('mascot-speak', { detail: 'Download CV (Buka Baju Portofolio)' }))}
+            onMouseLeave={() => window.dispatchEvent(new CustomEvent('mascot-speak-clear'))}
             className="hidden sm:flex px-3.5 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-fredoka font-bold text-xs rounded-xl shadow-lg border border-orange-400 items-center space-x-1.5 transition-all active:scale-95 shrink-0"
           >
             <Download className="w-3.5 h-3.5 text-white" />

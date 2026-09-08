@@ -108,6 +108,8 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onScrollToArca
               <div className="flex flex-wrap gap-4 pt-2">
                 <button
                   onClick={onScrollToArcade}
+                  onMouseEnter={() => window.dispatchEvent(new CustomEvent('mascot-speak', { detail: 'Pencet Aku Lebih Dalam! (Kih-kimochi~)' }))}
+                  onMouseLeave={() => window.dispatchEvent(new CustomEvent('mascot-speak-clear'))}
                   className="px-6 py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-fredoka font-extrabold text-base rounded-2xl shadow-xl border border-orange-400 flex items-center space-x-2 transition-all active:scale-95 group"
                 >
                   <Gamepad2 className="w-5 h-5 text-yellow-300 group-hover:rotate-12 transition-transform" />
@@ -118,6 +120,8 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onScrollToArca
                   href="/CV_KUAT_RIAWAN.pdf"
                   target="_blank"
                   rel="noreferrer"
+                  onMouseEnter={() => window.dispatchEvent(new CustomEvent('mascot-speak', { detail: 'File Ini Basah... Gara-gara Keringat Dingin Deadlines' }))}
+                  onMouseLeave={() => window.dispatchEvent(new CustomEvent('mascot-speak-clear'))}
                   className={`px-6 py-3.5 font-fredoka font-bold text-base rounded-2xl shadow-md border flex items-center space-x-2 transition-all active:scale-95 ${
                     isLight 
                       ? 'bg-white hover:bg-slate-50 text-slate-800 border-slate-300'
