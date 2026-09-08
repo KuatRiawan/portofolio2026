@@ -40,14 +40,12 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
       scene.traverse((node: any) => {
         if (node.isMesh) {
           if (theme === 'dark') {
-            // Dark mode uses Object_5 (Black)
             if (node.name.startsWith('Object_5')) {
               node.visible = true;
             } else {
               node.visible = false;
             }
           } else {
-            // Light mode uses Object_16 (White)
             if (node.name.startsWith('Object_16')) {
               node.visible = true;
             } else {
@@ -56,6 +54,11 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
           }
         }
       });
+
+      // The white character (Object_16) is offset by +33 in the GLB file.
+      // The black character (Object_5) is at 0.
+      // We apply the exact negative offset to the local scene to center them identically.
+      scene.position.x = theme === 'dark' ? 0 : -33;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [theme, scene]);
@@ -131,7 +134,7 @@ function MascotModel({ mood, isDragging, isFalling, isWalking, facingRight, eyeO
         <primitive 
           object={scene} 
           scale={3} 
-          position={[theme === 'dark' ? 0 : -99, -0.4, 0]} 
+          position={[0, -0.4, 0]} 
         />
       </group>
     </group>
