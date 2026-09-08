@@ -488,8 +488,8 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
           ctx.arc(0, 0, capRad, Math.PI, Math.PI * 2);
           ctx.fill();
 
-          // 2. BOTTOM HALF DOME - High-Gloss Pearl White Plastic
-          ctx.fillStyle = '#f8fafc';
+          // 2. BOTTOM HALF DOME - Pearl White (portfolio) or Gold (guest)
+          ctx.fillStyle = item.type === 'guest' ? '#fef08a' : '#f8fafc';
           ctx.beginPath();
           ctx.arc(0, 0, capRad, 0, Math.PI);
           ctx.fill();
