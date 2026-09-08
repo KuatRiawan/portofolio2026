@@ -26,7 +26,7 @@ export const MesinControlPanel: React.FC<MesinControlPanelProps> = ({
 
   const handleJoystickPress = (dx: number, dy: number) => {
     setJoystickTilt({ x: dx * 20, y: dy * 20 });
-    onJoystickMove(dx * 0.045, dy * 0.045);
+    onJoystickMove(dx * 0.015, dy * 0.015);
     soundFx.playMoveWhirr();
     setTimeout(() => setJoystickTilt({ x: 0, y: 0 }), 150);
   };
@@ -72,7 +72,7 @@ export const MesinControlPanel: React.FC<MesinControlPanelProps> = ({
     setJoystickTilt({ x: tiltX, y: tiltY });
 
     const normX = Math.cos(angle) * (clampedDist / maxRadius);
-    onJoystickMove(normX * 0.045, 0);
+    onJoystickMove(normX * 0.015, 0);
     soundFx.playMoveWhirr();
   };
 

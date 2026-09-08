@@ -240,10 +240,10 @@ export function App() {
       }
 
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-        handleClawMove(-0.035);
+        handleClawMove(-0.012);
         soundFx.playMoveWhirr();
       } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-        handleClawMove(0.035);
+        handleClawMove(0.012);
         soundFx.playMoveWhirr();
       } else if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
