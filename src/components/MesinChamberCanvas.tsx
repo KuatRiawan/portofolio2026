@@ -562,12 +562,15 @@ export const MesinChamberCanvas: React.FC<MesinChamberCanvasProps> = ({
         // Responsive Claw Scaling for Mobile screens
         const clawScale = Math.min(1.0, Math.max(0.72, width / 520));
 
-        // Top Steel Cable
+        // Flexible Top Steel Cable (Swinging Physics)
+        const clawDx = (currentClawState.x - smoothClawRef.current.x) * width;
+        const topAnchorX = clawPixelX + clawDx * 1.2;
+
         ctx.strokeStyle = '#475569';
         ctx.lineWidth = 4 * clawScale;
         ctx.beginPath();
-        ctx.moveTo(clawPixelX, 0);
-        ctx.lineTo(clawPixelX, clawPixelY);
+        ctx.moveTo(topAnchorX, -10);
+        ctx.quadraticCurveTo(clawPixelX - clawDx * 0.4, clawPixelY * 0.4, clawPixelX, clawPixelY);
         ctx.stroke();
 
         ctx.save();
